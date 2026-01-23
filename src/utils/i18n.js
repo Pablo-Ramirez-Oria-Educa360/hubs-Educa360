@@ -4,7 +4,7 @@ import { AVAILABLE_LOCALES, FALLBACK_LOCALES } from "../assets/locales/locale_co
 // These are set in the admin panel and are only included as fallbacks.
 const defaultLocaleData = {
   "app-name": location.hostname,
-  "editor-name": "Scene Editor",
+  "editor-name": "Educamaker",
   "contact-email": "app@company.com",
   "company-name": "Company",
   "share-hashtag": "#app",
