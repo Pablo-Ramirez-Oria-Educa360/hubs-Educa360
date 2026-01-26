@@ -17,7 +17,8 @@ export const SignInStep = {
 export const SignInMessages = defineMessages({
   pin: {
     id: "sign-in-modal.signin-message.pin",
-    defaultMessage: "You'll need to sign in to pin objects."
+    defaultMessage:
+      "You need an active account to create Classrooms in Educa360. If you don't have an account yet, go to <link>Educa360</link> and request one."
   },
   unpin: {
     id: "sign-in-modal.signin-message.unpin",
@@ -101,9 +102,32 @@ export function SubmitEmail({ onSubmitEmail, initialEmail, privacyUrl, termsUrl,
     <Column center padding as="form" onSubmit={onSubmitForm}>
       <p>
         {message ? (
-          intl.formatMessage(message)
+          message.id === "sign-in-modal.signin-message.pin" ? (
+            <FormattedMessage
+              {...message}
+              values={{
+                link: chunks => (
+                  <a href="https://www.educa360.com" target="_blank" rel="noopener noreferrer">
+                    {chunks}
+                  </a>
+                )
+              }}
+            />
+          ) : (
+            intl.formatMessage(message)
+          )
         ) : (
-          <FormattedMessage id="sign-in-modal.prompt" defaultMessage="Please Sign In" />
+          <FormattedMessage
+            id="sign-in-modal.prompt"
+            defaultMessage="You need an active account to create Classrooms in Educa360. If you don't have an account yet, go to <link>Educa360</link> and request one."
+            values={{
+              link: chunks => (
+                <a href="https://www.educa360.com" target="_blank" rel="noopener noreferrer">
+                  {chunks}
+                </a>
+              )
+            }}
+          />
         )}
       </p>
       <TextInputField
