@@ -52,15 +52,7 @@ export function Page({
         isHmc={isHmc}
       />
       <main {...rest}>
-        <MobileNav
-          showDocsLink={showDocsLink}
-          showSourceLink={showSourceLink}
-          showCommunityLink={showCommunityLink}
-          isHmc={isHmc}
-          isAdmin={isAdmin}
-          docsUrl={docsUrl}
-          communityUrl={communityUrl}
-        />
+        <MobileNav enableSpoke={enableSpoke} editorName={editorName} isAdmin={isAdmin} />
         {children}
       </main>
       <Footer

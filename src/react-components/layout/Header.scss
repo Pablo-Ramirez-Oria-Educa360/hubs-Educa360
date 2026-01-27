@@ -2,15 +2,16 @@
 
 header {
   display: block;
-  
+  background-color: #2b313b;
+  color: theme.$text5-color;
 
   @media(min-width: theme.$breakpoint-lg) {
     padding: 0;
   }
 
   a {
-    color: theme.$black;
-    font-weight: bold;
+    color: theme.$text5-color;
+    font-weight: theme.$font-weight-medium;
     text-decoration: none;
     white-space: nowrap;
   }
@@ -21,6 +22,7 @@ header {
 
     @media(min-width: theme.$breakpoint-lg) {
       flex-direction: row;
+      align-items: center;
     }
 
     li {
@@ -37,7 +39,7 @@ header {
     a {
       margin: 0 16px;
       font-size: theme.$font-size-md;
-      color: theme.$text1-color;
+      color: theme.$text5-color;
     }
 
     ul {
@@ -50,8 +52,9 @@ header {
       justify-content: space-between;
 
       @media(min-width: theme.$breakpoint-lg) {
-        justify-content: flex-end;
+        justify-content: center;
         flex-direction: row;
+        gap: 12px;
       }
     }
   }
@@ -62,7 +65,7 @@ header {
   align-items: center;
 
   @media(min-width: theme.$breakpoint-lg) {
-    height: 140px;
+    height: 96px;
     flex-direction: row;
     align-items: inherit;
   }
@@ -70,10 +73,10 @@ header {
 
 :local(.home-link) {
   display: inline-block;
-  width: 124px;
+  width: 140px;
  
   img {
-    max-height: 83px;
+    max-height: 70px;
     height: 100%;
   }
 }
@@ -87,7 +90,7 @@ header {
   
   a {
     margin-left: 8px;
-    color: theme.$link-color;
+    color: theme.$text5-color;
   }
 
   @media(min-width: theme.$breakpoint-lg) {
@@ -96,7 +99,32 @@ header {
     justify-content: flex-end;
     flex: 1;
     padding-top: 0;
+    gap: 16px;
   }
+}
+
+:local(.signed-in) {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: rgba(255, 255, 255, 0.85);
+  font-weight: theme.$font-weight-medium;
+}
+
+:local(.signed-in-label) {
+  font-size: theme.$font-size-md;
+}
+
+:local(.sign-out-button) {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+:local(.sign-out-icon) {
+  font-size: 16px;
 }
 
 :local(.nav-container) {

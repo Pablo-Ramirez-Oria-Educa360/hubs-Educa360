@@ -5,63 +5,39 @@ import styles from "./Header.scss";
 import { ReactComponent as Hamburger } from "../icons/Hamburger.svg";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCog } from "@fortawesome/free-solid-svg-icons/faCog";
-export function MobileNav({ isHmc, showDocsLink, docsUrl, showSourceLink, showCommunityLink, communityUrl, isAdmin }) {
+export function MobileNav({ enableSpoke, editorName, isAdmin }) {
   const [navOpen, setNav] = useState(false);
   const toggleNav = () => {
     setNav(!navOpen);
   };
-  const cloud = isHmc ? null : "cloud";
-
   return (
     <>
       <div className={styles.navContainer}>
         <div className={styles.mobileNavWrapper}>
           <Hamburger onClick={toggleNav} />
-          <header className={`${navOpen ? `is-active ${cloud}` : "hide"}`}>
+          <header className={`${navOpen ? "is-active" : "hide"}`}>
             <nav role="navigation">
               <ul>
-                {isHmc && (
+                {enableSpoke && (
                   <li>
-                    <a href="/spoke">
-                      <FormattedMessage id="header.spoke" defaultMessage="Spoke" />
-                    </a>
+                    <a href="/spoke">{editorName}</a>
                   </li>
                 )}
-                {showDocsLink && (
-                  <li>
-                    <a href={docsUrl}>
-                      <FormattedMessage id="header.docs" defaultMessage="Guides" />
-                    </a>
-                  </li>
-                )}
-                {showSourceLink && (
-                  <li>
-                    <a href="https://github.com/Hubs-Foundation/hubs">
-                      <FormattedMessage id="header.source" defaultMessage="Developers" />
-                    </a>
-                  </li>
-                )}
-                {showCommunityLink && (
-                  <li>
-                    <a href={communityUrl}>
-                      <FormattedMessage id="header.community" defaultMessage="Community" />
-                    </a>
-                  </li>
-                )}
-                {isHmc && (
-                  <li>
-                    <a href="/cloud">
-                      <FormattedMessage id="header.cloud" defaultMessage="Hubs Cloud" />
-                    </a>
-                  </li>
-                )}
-                {isHmc && (
-                  <li>
-                    <a href="/labs">
-                      <FormattedMessage id="header.labs" defaultMessage="Labs" />
-                    </a>
-                  </li>
-                )}
+                <li>
+                  <a href="https://educa360.com/">
+                    <FormattedMessage id="header.explore" defaultMessage="Explore" />
+                  </a>
+                </li>
+                <li>
+                  <a href="https://educa360.com/precios/">
+                    <FormattedMessage id="header.plans" defaultMessage="Plans" />
+                  </a>
+                </li>
+                <li>
+                  <a href="https://educa360.com/kitdeimplatacionvr/">
+                    <FormattedMessage id="header.resources" defaultMessage="Resources" />
+                  </a>
+                </li>
                 {isAdmin && (
                   <li>
                     <a style={{ marginLeft: 0 }} href="/admin" rel="noreferrer noopener">
@@ -83,11 +59,7 @@ export function MobileNav({ isHmc, showDocsLink, docsUrl, showSourceLink, showCo
 }
 
 MobileNav.propTypes = {
-  showDocsLink: PropTypes.bool,
-  docsUrl: PropTypes.string,
-  showSourceLink: PropTypes.bool,
-  showCommunityLink: PropTypes.bool,
-  communityUrl: PropTypes.string,
-  isAdmin: PropTypes.bool,
-  isHmc: PropTypes.bool
+  enableSpoke: PropTypes.bool,
+  editorName: PropTypes.string,
+  isAdmin: PropTypes.bool
 };

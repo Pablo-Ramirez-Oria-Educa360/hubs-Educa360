@@ -75,6 +75,7 @@
     "@formatjs/intl-pluralrules": "^4.0.3",
     "@formatjs/intl-relativetimeformat": "^8.0.1",
     "@fortawesome/fontawesome-svg-core": "^7.0.0",
+    "@fortawesome/free-brands-svg-icons": "^7.0.0",
     "@fortawesome/free-solid-svg-icons": "^7.0.0",
     "@fortawesome/react-fontawesome": "^0.2.3",
     "@mozilla/lilypad-ui": "1.8.6",
