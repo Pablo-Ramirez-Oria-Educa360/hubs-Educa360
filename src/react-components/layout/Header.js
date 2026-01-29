@@ -4,6 +4,7 @@ import { FormattedMessage } from "react-intl";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCog } from "@fortawesome/free-solid-svg-icons/faCog";
 import { faArrowRightFromBracket } from "@fortawesome/free-solid-svg-icons/faArrowRightFromBracket";
+import { faUserCircle } from "@fortawesome/free-solid-svg-icons/faUserCircle";
 import styles from "./Header.scss";
 import { Container } from "./Container";
 import { SocialBar } from "../home/SocialBar";
@@ -66,17 +67,14 @@ export function Header({ enableSpoke, editorName, isAdmin, isSignedIn, email, on
             <div className={styles.signedIn}>
               <Button preset="signin" thick as="a" href="#" onClick={onSignOut} className={styles.signOutButton}>
                 {maskedEmail ? (
-                  <span className={styles.signOutLabel}>
-                    <FormattedMessage
-                      id="more-menu.you-signed-in-as"
-                      defaultMessage="Signed in as: {email}"
-                      values={{ email: maskedEmail }}
-                    />
-                  </span>
+                  <>
+                    <FontAwesomeIcon icon={faUserCircle} className={styles.signOutIcon} />
+                    <span className={styles.signOutLabel}>{maskedEmail}</span>
+                    <FontAwesomeIcon icon={faArrowRightFromBracket} className={styles.signOutIcon} />
+                  </>
                 ) : (
                   <FormattedMessage id="header.sign-out" defaultMessage="Sign Out" />
                 )}
-                <FontAwesomeIcon icon={faArrowRightFromBracket} className={styles.signOutIcon} />
               </Button>
             </div>
           ) : (

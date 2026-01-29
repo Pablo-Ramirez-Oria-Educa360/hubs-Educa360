@@ -68,7 +68,12 @@ export function HomePage() {
             />
             <div className={styles.heroOverlay}>
               <div className={styles.heroContent}>
-                <h1 className={styles.heroTitle}>{configs.translation("app-description")}</h1>
+                <h1 className={styles.heroTitle}>
+                  <span className={styles.heroTitleIntro}>
+                    <FormattedMessage id="home-page.hero-intro" defaultMessage="El metaverso educativo:" />
+                  </span>
+                  <span className={styles.heroTitleMain}>{configs.translation("app-description")}</span>
+                </h1>
                 <div className={styles.heroActions}>
                   {canCreateRooms && <CreateRoomButton />}
                   <PWAButton />

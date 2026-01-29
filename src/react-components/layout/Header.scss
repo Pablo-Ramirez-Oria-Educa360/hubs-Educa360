@@ -67,7 +67,7 @@ header {
   @media(min-width: theme.$breakpoint-lg) {
     height: 96px;
     flex-direction: row;
-    align-items: inherit;
+    align-items: center;
   }
 }
 
@@ -121,6 +121,7 @@ header {
 
 :local(.sign-out-label) {
   font-size: theme.$font-size-sm;
+  line-height: 1;
 }
 
 :local(.sign-out-icon) {
