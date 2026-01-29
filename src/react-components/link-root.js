@@ -141,7 +141,15 @@ class LinkRoot extends Component {
                     values={{ linebreak: <br /> }}
                   />
                 ) : (
-                  <FormattedMessage id="link-page.enter-code" defaultMessage="Enter code:" />
+                  <>
+                    <FormattedMessage id="link-page.enter-code" defaultMessage="Enter code:" />
+                    <span className={styles.subheader}>
+                      <FormattedMessage
+                        id="link-page.enter-code-hint"
+                        defaultMessage="Use the one-time code shown on your device"
+                      />
+                    </span>
+                  </>
                 )}
               </div>
 
@@ -193,6 +201,7 @@ class LinkRoot extends Component {
                 <FormattedMessage id="link-page.create-room-button" defaultMessage="Create a new room" />
               </a>
             </div>
+
           </div>
         </div>
       </WrappedIntlProvider>

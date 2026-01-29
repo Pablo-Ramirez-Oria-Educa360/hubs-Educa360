@@ -112,6 +112,16 @@
   flex-direction: column;
   gap: 12px;
   align-items: flex-start;
+
+  @media (min-width: theme.$breakpoint-lg) {
+    flex-direction: row;
+    align-items: center;
+  }
+
+  & > * {
+    min-width: 220px;
+    justify-content: center;
+  }
 }
 
 :local(.hero-image-card) {

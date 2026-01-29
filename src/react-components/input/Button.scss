@@ -294,9 +294,11 @@
   box-sizing: border-box;
   border-radius: 13px;
   &:hover {
+    color: theme.$text5-color;
     background-color: #00a81a;
   }
   &:active {
+    color: theme.$text5-color;
     background-color: #00870f;
   }
 }

@@ -8,6 +8,8 @@ import { faUsers } from "@fortawesome/free-solid-svg-icons/faUsers";
 import { faVrCardboard } from "@fortawesome/free-solid-svg-icons/faVrCardboard";
 import configs from "../../utils/configs";
 import { CreateRoomButton } from "./CreateRoomButton";
+import { Button } from "../input/Button";
+import { useCssBreakpoints } from "react-use-css-breakpoints";
 import { PWAButton } from "./PWAButton";
 import { useFavoriteRooms } from "./useFavoriteRooms";
 import { usePublicRooms } from "./usePublicRooms";
@@ -24,6 +26,7 @@ import { Container } from "../layout/Container";
 export function HomePage() {
   const auth = useContext(AuthContext);
   const intl = useIntl();
+  const breakpoint = useCssBreakpoints();
 
   const { results: favoriteRooms } = useFavoriteRooms();
   const { results: publicRooms } = usePublicRooms();
@@ -76,6 +79,15 @@ export function HomePage() {
                 </h1>
                 <div className={styles.heroActions}>
                   {canCreateRooms && <CreateRoomButton />}
+                  <Button
+                    thick={breakpoint === "sm" || breakpoint === "md"}
+                    xl={breakpoint !== "sm" && breakpoint !== "md"}
+                    preset="landing"
+                    as="a"
+                    href="/link"
+                  >
+                    <FormattedMessage id="home-page.enter-by-code" defaultMessage="Enter by code" />
+                  </Button>
                   <PWAButton />
                 </div>
               </div>
