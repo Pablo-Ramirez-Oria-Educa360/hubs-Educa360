@@ -11,7 +11,7 @@ import { SignInButton } from "../home/SignInButton";
 import { AppLogo } from "../misc/AppLogo";
 import { Button } from "../input/Button";
 
-export function Header({ enableSpoke, editorName, isAdmin, isSignedIn, onSignOut, isHmc }) {
+export function Header({ enableSpoke, editorName, isAdmin, isSignedIn, email, onSignOut, isHmc }) {
   return (
     <header>
       <Container as="div" className={styles.container}>
@@ -28,17 +28,21 @@ export function Header({ enableSpoke, editorName, isAdmin, isSignedIn, onSignOut
               </li>
             )}
             <li>
-              <a href="https://educa360.com/">
+              <a href="https://educa360.com/" target="_blank" rel="noopener noreferrer">
                 <FormattedMessage id="header.explore" defaultMessage="Explore" />
               </a>
             </li>
             <li>
-              <a href="https://educa360.com/precios/">
+              <a href="https://educa360.com/precios/" target="_blank" rel="noopener noreferrer">
                 <FormattedMessage id="header.plans" defaultMessage="Plans" />
               </a>
             </li>
             <li>
-              <a href="https://content.app-sources.com/s/90759658313721701/uploads/tutoriales/Manual_Educa360_v2-6411442.pdf">
+              <a
+                href="https://content.app-sources.com/s/90759658313721701/uploads/tutoriales/Manual_Educa360_v2-6411442.pdf"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
                 <FormattedMessage id="header.resources" defaultMessage="Resources" />
               </a>
             </li>
@@ -58,6 +62,15 @@ export function Header({ enableSpoke, editorName, isAdmin, isSignedIn, onSignOut
         <div className={styles.signIn}>
           {isSignedIn ? (
             <div className={styles.signedIn}>
+              {email && (
+                <span className={styles.signedInLabel}>
+                  <FormattedMessage
+                    id="more-menu.you-signed-in-as"
+                    defaultMessage="Signed in as: {email}"
+                    values={{ email }}
+                  />
+                </span>
+              )}
               <Button preset="signin" thick as="a" href="#" onClick={onSignOut} className={styles.signOutButton}>
                 <FontAwesomeIcon icon={faUserCircle} className={styles.signOutIcon} />
                 <FormattedMessage id="header.sign-out" defaultMessage="Sign Out" />
@@ -78,6 +91,7 @@ Header.propTypes = {
   editorName: PropTypes.string,
   isAdmin: PropTypes.bool,
   isSignedIn: PropTypes.bool,
+  email: PropTypes.string,
   onSignOut: PropTypes.func,
   isHmc: PropTypes.bool
 };

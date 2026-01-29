@@ -40,7 +40,12 @@ export function Footer({
                   defaultMessage="Powered by <a>Hubs</a>"
                   values={{
                     a: chunks => (
-                      <a className={styles.link} href="https://hubsfoundation.org">
+                      <a
+                        className={styles.link}
+                        href="https://hubsfoundation.org"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
                         {chunks}
                       </a>
                     )
@@ -96,19 +101,19 @@ export function Footer({
               <FormattedMessage id="footer.social.title" defaultMessage="Social" />
             </h4>
             <div className={styles.socialIcons}>
-              <a href="https://www.linkedin.com/company/educa360-edtech">
+              <a href="https://www.linkedin.com/company/educa360-edtech" target="_blank" rel="noopener noreferrer">
                 <FontAwesomeIcon icon={faLinkedinIn} />
               </a>
-              <a href="https://www.instagram.com/educa360/">
+              <a href="https://www.instagram.com/educa360/" target="_blank" rel="noopener noreferrer">
                 <FontAwesomeIcon icon={faInstagram} />
               </a>
-              <a href="https://www.facebook.com/Educa360EdTech">
+              <a href="https://www.facebook.com/Educa360EdTech" target="_blank" rel="noopener noreferrer">
                 <FontAwesomeIcon icon={faFacebookF} />
               </a>
-              <a href="https://x.com/educa360_EdTech">
+              <a href="https://x.com/educa360_EdTech" target="_blank" rel="noopener noreferrer">
                 <FontAwesomeIcon icon={faXTwitter} />
               </a>
-              <a href="https://www.youtube.com/@educa360edtech6">
+              <a href="https://www.youtube.com/@educa360edtech6" target="_blank" rel="noopener noreferrer">
                 <FontAwesomeIcon icon={faYoutube} />
               </a>
             </div>

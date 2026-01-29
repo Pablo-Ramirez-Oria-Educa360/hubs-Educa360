@@ -7,6 +7,9 @@
   align-items: center;
   background-color: #2b313b;
   color: theme.$text5-color;
+  user-select: none;
+  -webkit-user-select: none;
+  -ms-user-select: none;
 
   @media (min-width: theme.$breakpoint-lg) {
     align-items: center;
