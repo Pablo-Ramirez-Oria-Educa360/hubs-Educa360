@@ -28,17 +28,17 @@ export function Header({ enableSpoke, editorName, isAdmin, isSignedIn, onSignOut
               </li>
             )}
             <li>
-              <a href="">
+              <a href="https://educa360.com/">
                 <FormattedMessage id="header.explore" defaultMessage="Explore" />
               </a>
             </li>
             <li>
-              <a href="">
+              <a href="https://educa360.com/precios/">
                 <FormattedMessage id="header.plans" defaultMessage="Plans" />
               </a>
             </li>
             <li>
-              <a href="">
+              <a href="https://content.app-sources.com/s/90759658313721701/uploads/tutoriales/Manual_Educa360_v2-6411442.pdf">
                 <FormattedMessage id="header.resources" defaultMessage="Resources" />
               </a>
             </li>

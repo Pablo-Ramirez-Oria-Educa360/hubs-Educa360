@@ -6,8 +6,9 @@ import { Container } from "./Container";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faFacebookF } from "@fortawesome/free-brands-svg-icons/faFacebookF";
 import { faInstagram } from "@fortawesome/free-brands-svg-icons/faInstagram";
-import { faTwitter } from "@fortawesome/free-brands-svg-icons/faTwitter";
+import { faXTwitter } from "@fortawesome/free-brands-svg-icons/faXTwitter";
 import { faYoutube } from "@fortawesome/free-brands-svg-icons/faYoutube";
+import { faLinkedinIn } from "@fortawesome/free-brands-svg-icons/faLinkedinIn";
 
 export function Footer({
   hidePoweredBy,
@@ -54,23 +55,17 @@ export function Footer({
             </h4>
             <ul>
               <li>
-                <a href="">
-                  <FormattedMessage id="footer.support.explore" defaultMessage="Explore" />
+                <a
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  href="https://content.app-sources.com/s/90759658313721701/uploads/tutoriales/Manual_Educa360_v2-6411442.pdf"
+                >
+                  <FormattedMessage id="footer.support.guide" defaultMessage="Guide" />
                 </a>
               </li>
               <li>
-                <a href="">
+                <a href="mailto:soporte@educa360.com">
                   <FormattedMessage id="footer.support.support" defaultMessage="Support" />
-                </a>
-              </li>
-              <li>
-                <a href="">
-                  <FormattedMessage id="footer.support.gamification" defaultMessage="Gamification" />
-                </a>
-              </li>
-              <li>
-                <a href="">
-                  <FormattedMessage id="footer.support.interactive" defaultMessage="Interactive Content" />
                 </a>
               </li>
             </ul>
@@ -94,16 +89,6 @@ export function Footer({
                   </a>
                 </li>
               )}
-              <li>
-                <a href="">
-                  <FormattedMessage id="footer.legal.sales-limit" defaultMessage="Sales Limit" />
-                </a>
-              </li>
-              <li>
-                <a href="">
-                  <FormattedMessage id="footer.legal.contact" defaultMessage="Contact" />
-                </a>
-              </li>
             </ul>
           </div>
           <div className={styles.column}>
@@ -111,16 +96,19 @@ export function Footer({
               <FormattedMessage id="footer.social.title" defaultMessage="Social" />
             </h4>
             <div className={styles.socialIcons}>
-              <a href="">
-                <FontAwesomeIcon icon={faFacebookF} />
+              <a href="https://www.linkedin.com/company/educa360-edtech">
+                <FontAwesomeIcon icon={faLinkedinIn} />
               </a>
-              <a href="">
-                <FontAwesomeIcon icon={faTwitter} />
-              </a>
-              <a href="">
+              <a href="https://www.instagram.com/educa360/">
                 <FontAwesomeIcon icon={faInstagram} />
               </a>
-              <a href="">
+              <a href="https://www.facebook.com/Educa360EdTech">
+                <FontAwesomeIcon icon={faFacebookF} />
+              </a>
+              <a href="https://x.com/educa360_EdTech">
+                <FontAwesomeIcon icon={faXTwitter} />
+              </a>
+              <a href="https://www.youtube.com/@educa360edtech6">
                 <FontAwesomeIcon icon={faYoutube} />
               </a>
             </div>
