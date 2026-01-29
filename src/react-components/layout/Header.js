@@ -3,15 +3,17 @@ import PropTypes from "prop-types";
 import { FormattedMessage } from "react-intl";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCog } from "@fortawesome/free-solid-svg-icons/faCog";
-import { faUserCircle } from "@fortawesome/free-solid-svg-icons/faUserCircle";
+import { faArrowRightFromBracket } from "@fortawesome/free-solid-svg-icons/faArrowRightFromBracket";
 import styles from "./Header.scss";
 import { Container } from "./Container";
 import { SocialBar } from "../home/SocialBar";
 import { SignInButton } from "../home/SignInButton";
 import { AppLogo } from "../misc/AppLogo";
 import { Button } from "../input/Button";
+import maskEmail from "../../utils/mask-email";
 
 export function Header({ enableSpoke, editorName, isAdmin, isSignedIn, email, onSignOut, isHmc }) {
+  const maskedEmail = maskEmail(email);
   return (
     <header>
       <Container as="div" className={styles.container}>
@@ -62,18 +64,19 @@ export function Header({ enableSpoke, editorName, isAdmin, isSignedIn, email, on
         <div className={styles.signIn}>
           {isSignedIn ? (
             <div className={styles.signedIn}>
-              {email && (
-                <span className={styles.signedInLabel}>
-                  <FormattedMessage
-                    id="more-menu.you-signed-in-as"
-                    defaultMessage="Signed in as: {email}"
-                    values={{ email }}
-                  />
-                </span>
-              )}
               <Button preset="signin" thick as="a" href="#" onClick={onSignOut} className={styles.signOutButton}>
-                <FontAwesomeIcon icon={faUserCircle} className={styles.signOutIcon} />
-                <FormattedMessage id="header.sign-out" defaultMessage="Sign Out" />
+                {maskedEmail ? (
+                  <span className={styles.signOutLabel}>
+                    <FormattedMessage
+                      id="more-menu.you-signed-in-as"
+                      defaultMessage="Signed in as: {email}"
+                      values={{ email: maskedEmail }}
+                    />
+                  </span>
+                ) : (
+                  <FormattedMessage id="header.sign-out" defaultMessage="Sign Out" />
+                )}
+                <FontAwesomeIcon icon={faArrowRightFromBracket} className={styles.signOutIcon} />
               </Button>
             </div>
           ) : (

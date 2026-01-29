@@ -111,16 +111,16 @@ header {
   font-weight: theme.$font-weight-medium;
 }
 
-:local(.signed-in-label) {
-  font-size: theme.$font-size-md;
-}
-
 :local(.sign-out-button) {
   display: inline-flex;
   align-items: center;
   gap: 8px;
   text-decoration: none;
   white-space: nowrap;
+}
+
+:local(.sign-out-label) {
+  font-size: theme.$font-size-sm;
 }
 
 :local(.sign-out-icon) {
