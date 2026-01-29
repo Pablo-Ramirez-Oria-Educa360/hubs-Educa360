@@ -37,22 +37,24 @@ fi
 
 # lints changed JavaScript and TypeScript
 changed_js=$(git diff-index --cached --name-only $against | grep -E "(.*\.(js|mjs|ts|mts)|scripts/.*\.(js|mjs|ts|mts)|src/.*\.(js|mjs|ts|mts)|test/.*\.(js|mjs|ts|mts)|admin/.*\.(js|mjs|ts|mts)|admin/src/.*\.(js|mjs|ts|mts))$")
-# /dev/null prevents eslint from checking everything
-./node_modules/.bin/eslint ${changed_js:-/dev/null}
-LINT_STATUS=$?
-if [ "$LINT_STATUS" != "0" ]; then
-  echo 'Fix the errors above, then use `git add` to restage all fixed files'
-  exit $LINT_STATUS
+if [ -n "$changed_js" ]; then
+  ./node_modules/.bin/eslint $changed_js
+  LINT_STATUS=$?
+  if [ "$LINT_STATUS" != "0" ]; then
+    echo 'Fix the errors above, then use `git add` to restage all fixed files'
+    exit $LINT_STATUS
+  fi
 fi
 
 # lints changed HTML
 changed_html=$(git diff-index --cached --name-only $against | grep -E "^src/.*\.html$")
-# src/tokens.html prevents htmlhint from checking everything
-node_modules/.bin/htmlhint ${changed_html:-src/tokens.html}
-LINT_STATUS=$?
-if [ "$LINT_STATUS" != "0" ]; then
-  echo 'Fix the errors above, then use `git add` to restage all fixed files'
-  exit $LINT_STATUS
+if [ -n "$changed_html" ]; then
+  node_modules/.bin/htmlhint $changed_html
+  LINT_STATUS=$?
+  if [ "$LINT_STATUS" != "0" ]; then
+    echo 'Fix the errors above, then use `git add` to restage all fixed files'
+    exit $LINT_STATUS
+  fi
 fi
 
 # runs all automated tests
