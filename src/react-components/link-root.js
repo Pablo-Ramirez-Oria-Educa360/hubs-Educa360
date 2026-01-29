@@ -201,7 +201,6 @@ class LinkRoot extends Component {
                 <FormattedMessage id="link-page.create-room-button" defaultMessage="Create a new room" />
               </a>
             </div>
-
           </div>
         </div>
       </WrappedIntlProvider>
