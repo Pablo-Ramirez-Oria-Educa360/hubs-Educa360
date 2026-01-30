@@ -24,8 +24,13 @@
 }
 
 :local(.short-url-container) {
-  width: min(90vw, 520px);
+  width: min(80vw, 420px);
+  padding: 0 16px;
+  box-sizing: border-box;
+  font-size: 28px;
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 :local(.code-letter) {
