@@ -6,10 +6,12 @@ import configs from "../utils/configs";
 import classNames from "classnames";
 import styles from "../assets/stylesheets/link.scss";
 import { disableiOSZoom } from "../utils/disable-ios-zoom";
+import { setLocale } from "../utils/i18n";
 
 const MAX_LETTERS = 4;
 
 disableiOSZoom();
+setLocale("browser");
 const hasTouchEvents = "ontouchstart" in document.documentElement;
 
 class LinkRoot extends Component {
