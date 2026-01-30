@@ -390,7 +390,7 @@
   "enter-on-device-modal.title": "Generar código",
   "enter-on-device-modal.heading": "Entrar en visor inalámbrico / móvil",
   "enter-on-device-modal.generating-code": "Generando código...",
-  "enter-on-device-modal.short-url-directions": "Abre {shortUrl} en tu visor y escribe el código.",
+  "enter-on-device-modal.short-url-directions": "Abre esta dirección en tu visor y escribe el código.",
   "enter-on-device-modal.code-directions": "Luego, introduce este código de un solo uso:",
   "enter-on-device-modal.data-transfer": "Mantén esta página abierta para transferir datos.",
   "enter-on-device-modal.keep-page-open": "No cierres esta pestaña.",

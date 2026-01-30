@@ -24,7 +24,8 @@
 }
 
 :local(.short-url-container) {
-  width: 204px;
+  width: min(90vw, 520px);
+  white-space: nowrap;
 }
 
 :local(.code-letter) {
