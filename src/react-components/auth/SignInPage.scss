@@ -1,0 +1,7 @@
+@use "../styles/theme.scss";
+
+:local(.signInCenter) {
+  @media (max-width: theme.$breakpoint-lg) {
+    padding-top: 20px;
+  }
+}

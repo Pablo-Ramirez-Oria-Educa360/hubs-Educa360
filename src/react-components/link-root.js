@@ -200,7 +200,7 @@ class LinkRoot extends Component {
 
             <div className={styles.createLink}>
               <a href="/">
-                <FormattedMessage id="link-page.create-room-button" defaultMessage="Create a new room" />
+                <FormattedMessage id="link-page.create-room-button" defaultMessage="Back to menu" />
               </a>
             </div>
           </div>
