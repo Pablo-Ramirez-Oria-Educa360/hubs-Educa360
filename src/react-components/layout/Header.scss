@@ -54,6 +54,16 @@ header {
         gap: 12px;
       }
     }
+
+    @media (max-width: theme.$breakpoint-lg - 1) {
+      ul > li {
+        display: none;
+      }
+
+      ul > li:first-child {
+        display: block;
+      }
+    }
   }
 }
 
@@ -75,6 +85,10 @@ header {
   img {
     max-height: 70px;
     height: 100%;
+  }
+
+  @media (max-width: theme.$breakpoint-lg - 1) {
+    display: none;
   }
 }
 :local(.sign-in) {
@@ -127,8 +141,8 @@ header {
 
 :local(.nav-container) {
   position: relative;
-  margin-bottom: -48px;
-  margin-top: 0.75rem;
+  margin-bottom: -40px;
+  margin-top: 1.25rem;
   z-index: 3;
   display: flex;
   align-content: center;
@@ -251,5 +265,23 @@ header {
     line-height: 1.2;
     align-items: center;
     display: inline-flex;
+  }
+}
+
+:local(.mobilePanelLogo) {
+  display: flex;
+  justify-content: center;
+  padding: 12px 0 8px;
+  width: 100%;
+  text-align: center;
+
+  a {
+    display: inline-flex;
+  }
+
+  img {
+    max-height: 56px;
+    height: 100%;
+    margin: 0 auto;
   }
 }

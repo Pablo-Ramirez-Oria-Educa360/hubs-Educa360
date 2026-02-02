@@ -5,9 +5,10 @@ footer {
   background-color: #242830;
   color: theme.$text5-color;
   font-size: theme.$font-size-md;
-  padding: 48px 0 24px;
+  padding: 40px 20px 24px;
 
   @media(min-width: theme.$breakpoint-lg) {
+    padding: 48px 0 24px;
     display: block;
   }
 }

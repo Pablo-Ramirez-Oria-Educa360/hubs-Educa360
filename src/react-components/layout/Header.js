@@ -7,13 +7,12 @@ import { faArrowRightFromBracket } from "@fortawesome/free-solid-svg-icons/faArr
 import { faUserCircle } from "@fortawesome/free-solid-svg-icons/faUserCircle";
 import styles from "./Header.scss";
 import { Container } from "./Container";
-import { SocialBar } from "../home/SocialBar";
 import { SignInButton } from "../home/SignInButton";
 import { AppLogo } from "../misc/AppLogo";
 import { Button } from "../input/Button";
 import maskEmail from "../../utils/mask-email";
 
-export function Header({ enableSpoke, editorName, isAdmin, isSignedIn, email, onSignOut, isHmc }) {
+export function Header({ enableSpoke, editorName, isAdmin, isSignedIn, email, onSignOut }) {
   const maskedEmail = maskEmail(email);
   return (
     <header>
@@ -81,7 +80,6 @@ export function Header({ enableSpoke, editorName, isAdmin, isSignedIn, email, on
             <SignInButton />
           )}
         </div>
-        {isHmc ? <SocialBar mobile /> : null}
       </Container>
     </header>
   );
@@ -93,6 +91,5 @@ Header.propTypes = {
   isAdmin: PropTypes.bool,
   isSignedIn: PropTypes.bool,
   email: PropTypes.string,
-  onSignOut: PropTypes.func,
-  isHmc: PropTypes.bool
+  onSignOut: PropTypes.func
 };

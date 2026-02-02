@@ -8,6 +8,7 @@ import { faCog } from "@fortawesome/free-solid-svg-icons/faCog";
 import { SignInButton } from "../home/SignInButton";
 import { Button } from "../input/Button";
 import maskEmail from "../../utils/mask-email";
+import { AppLogo } from "../misc/AppLogo";
 
 export function MobileNav({ enableSpoke, editorName, isAdmin, isSignedIn, email, onSignOut }) {
   const [navOpen, setNav] = useState(false);
@@ -19,14 +20,10 @@ export function MobileNav({ enableSpoke, editorName, isAdmin, isSignedIn, email,
     id: "mobile-nav.toggle-menu",
     defaultMessage: "Toggle menu"
   });
+
   return (
     <div className={styles.navContainer}>
-      <button
-        className={styles.hamburgerButton}
-        onClick={toggleNav}
-        aria-label={toggleLabel}
-        aria-expanded={navOpen}
-      >
+      <button className={styles.hamburgerButton} onClick={toggleNav} aria-label={toggleLabel} aria-expanded={navOpen}>
         <Hamburger />
       </button>
       <div
@@ -35,6 +32,11 @@ export function MobileNav({ enableSpoke, editorName, isAdmin, isSignedIn, email,
         role="presentation"
       />
       <aside className={`${styles.mobilePanel} ${navOpen ? styles.mobilePanelOpen : ""}`} aria-hidden={!navOpen}>
+        <div className={styles.mobilePanelLogo}>
+          <a href="/" onClick={closeNav}>
+            <AppLogo />
+          </a>
+        </div>
         <nav role="navigation">
           <ul>
             {enableSpoke && (
