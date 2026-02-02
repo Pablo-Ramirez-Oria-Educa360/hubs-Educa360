@@ -17,7 +17,11 @@
   }
 
   & > section {
-    margin: 2em auto;
+    margin: 1.5em auto;
+
+    @media (min-width: theme.$breakpoint-lg) {
+      margin: 2em auto;
+    }
   }
 }
 
@@ -57,7 +61,7 @@
   align-items: center;
   flex: 1;
   gap: 32px;
-  padding: 56px 0 40px;
+  padding: 32px 0 24px;
 
   @media (min-width: theme.$breakpoint-lg) {
     flex-direction: row;
@@ -72,14 +76,18 @@
   gap: 20px;
   max-width: 520px;
   z-index: 2;
+  text-align: center;
+  align-items: center;
 
   @media (min-width: theme.$breakpoint-lg) {
     flex: 1;
+    text-align: left;
+    align-items: flex-start;
   }
 }
 
 :local(.hero-title) {
-  font-size: 36px;
+  font-size: 32px;
   line-height: 1.15;
   margin: 0;
   font-weight: theme.$font-weight-medium;
@@ -92,7 +100,10 @@
 :local(.hero-title-intro) {
   display: block;
   font-weight: theme.$font-weight-medium;
-  white-space: nowrap;
+
+  @media (min-width: theme.$breakpoint-lg) {
+    white-space: nowrap;
+  }
 }
 
 :local(.hero-title-main) {
@@ -111,23 +122,33 @@
   display: flex;
   flex-direction: column;
   gap: 12px;
-  align-items: flex-start;
+  align-items: stretch;
+  width: 100%;
+  max-width: 360px;
 
   @media (min-width: theme.$breakpoint-lg) {
     flex-direction: row;
     align-items: center;
+    width: auto;
+    max-width: none;
   }
 
   & > * {
-    min-width: 220px;
+    min-width: 0;
+    width: 100%;
     justify-content: center;
+
+    @media (min-width: theme.$breakpoint-lg) {
+      min-width: 220px;
+      width: auto;
+    }
   }
 }
 
 :local(.hero-image-card) {
   flex: 1;
   width: 100%;
-  max-height: 420px;
+  max-height: 320px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -144,8 +165,15 @@
     border-radius: 20px;
     display: block;
     object-fit: cover;
-    mask-image: linear-gradient(90deg, transparent 0%, transparent 23%, #000 48%, #000 100%);
-    -webkit-mask-image: linear-gradient(90deg, transparent 0%, transparent 23%, #000 48%, #000 100%);
+
+    @media (min-width: theme.$breakpoint-lg) {
+      mask-image: linear-gradient(90deg, transparent 0%, transparent 23%, #000 48%, #000 100%);
+      -webkit-mask-image: linear-gradient(90deg, transparent 0%, transparent 23%, #000 48%, #000 100%);
+    }
+  }
+
+  @media (min-width: theme.$breakpoint-lg) {
+    max-height: 420px;
   }
 }
 
@@ -154,7 +182,7 @@
   inset: 0;
   display: flex;
   align-items: center;
-  padding: 32px;
+  padding: 24px;
   background: transparent;
 
   @media (min-width: theme.$breakpoint-lg) {
@@ -165,14 +193,20 @@
 :local(.features-row) {
   display: flex;
   width: 100%;
-  justify-content: space-around;
-  align-items: flex-start;
-  gap: 24px;
-  padding: 24px 0 56px;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 20px;
+  padding: 20px 0 40px;
   flex-wrap: wrap;
 
   @media (min-width: theme.$breakpoint-lg) {
+    flex-direction: row;
     flex-wrap: nowrap;
+    justify-content: space-around;
+    align-items: flex-start;
+    gap: 24px;
+    padding: 24px 0 56px;
   }
 }
 
@@ -278,15 +312,25 @@
 }
 
 :local(.rooms-container) {
-  margin-top: 80px !important;
+  margin-top: 48px !important;
   display: flex;
   flex-direction: column;
+
+  @media (min-width: theme.$breakpoint-lg) {
+    margin-top: 80px !important;
+  }
 }
 
 :local(.rooms-heading) {
-  margin-left: 40px;
+  margin-left: 0;
   font-size: 24px;
   margin-bottom: 16px;
+  text-align: center;
+
+  @media (min-width: theme.$breakpoint-lg) {
+    margin-left: 40px;
+    text-align: left;
+  }
 }
  
 :local(.rooms) {

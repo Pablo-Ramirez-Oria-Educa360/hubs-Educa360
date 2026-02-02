@@ -52,7 +52,14 @@ export function Page({
         isHmc={isHmc}
       />
       <main {...rest}>
-        <MobileNav enableSpoke={enableSpoke} editorName={editorName} isAdmin={isAdmin} />
+        <MobileNav
+          enableSpoke={enableSpoke}
+          editorName={editorName}
+          isAdmin={isAdmin}
+          isSignedIn={isSignedIn}
+          email={email}
+          onSignOut={onSignOut}
+        />
         {children}
       </main>
       <Footer
