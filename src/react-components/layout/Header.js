@@ -12,7 +12,7 @@ import { AppLogo } from "../misc/AppLogo";
 import { Button } from "../input/Button";
 import maskEmail from "../../utils/mask-email";
 
-export function Header({ enableSpoke, editorName, isAdmin, isSignedIn, email, onSignOut, onOpenAvatarMaker }) {
+export function Header({ enableSpoke, editorName, isAdmin, isSignedIn, email, onSignOut }) {
   const maskedEmail = maskEmail(email);
   return (
     <header>
@@ -46,19 +46,6 @@ export function Header({ enableSpoke, editorName, isAdmin, isSignedIn, email, on
                 rel="noopener noreferrer"
               >
                 <FormattedMessage id="header.resources" defaultMessage="Resources" />
-              </a>
-            </li>
-            <li>
-              <a
-                href="https://avatar-maker.educa360.es"
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={e => {
-                  e.preventDefault();
-                  if (onOpenAvatarMaker) onOpenAvatarMaker();
-                }}
-              >
-                <FormattedMessage id="header.avatar-maker" defaultMessage="Avatar Maker" />
               </a>
             </li>
             {isAdmin && (
@@ -104,6 +91,5 @@ Header.propTypes = {
   isAdmin: PropTypes.bool,
   isSignedIn: PropTypes.bool,
   email: PropTypes.string,
-  onSignOut: PropTypes.func,
-  onOpenAvatarMaker: PropTypes.func
+  onSignOut: PropTypes.func
 };

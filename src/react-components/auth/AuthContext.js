@@ -101,7 +101,6 @@ export function AuthContextProvider({ children, store }) {
     isSignedIn: !!store.state.credentials && !!store.state.credentials.token,
     isAdmin: configs.isAdmin(),
     email: store.state.credentials && store.state.credentials.email,
-    token: store.state.credentials && store.state.credentials.token,
     userId: store.credentialsAccountId,
     signIn,
     verify,
@@ -116,7 +115,6 @@ export function AuthContextProvider({ children, store }) {
         isSignedIn: !!store.state.credentials && !!store.state.credentials.token,
         isAdmin: configs.isAdmin(),
         email: store.state.credentials && store.state.credentials.email,
-        token: store.state.credentials && store.state.credentials.token,
         userId: store.credentialsAccountId
       }));
     };

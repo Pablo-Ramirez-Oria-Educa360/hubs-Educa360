@@ -19,7 +19,6 @@ export function Page({
   isSignedIn,
   email,
   onSignOut,
-  onOpenAvatarMaker,
   hidePoweredBy,
   showWhatsNewLink,
   showTerms,
@@ -50,7 +49,6 @@ export function Page({
         isSignedIn={isSignedIn}
         email={email}
         onSignOut={onSignOut}
-        onOpenAvatarMaker={onOpenAvatarMaker}
         isHmc={isHmc}
       />
       <main {...rest}>
@@ -61,7 +59,6 @@ export function Page({
           isSignedIn={isSignedIn}
           email={email}
           onSignOut={onSignOut}
-          onOpenAvatarMaker={onOpenAvatarMaker}
         />
         {children}
       </main>
@@ -95,7 +92,6 @@ Page.propTypes = {
   isSignedIn: PropTypes.bool,
   email: PropTypes.string,
   onSignOut: PropTypes.func,
-  onOpenAvatarMaker: PropTypes.func,
   hidePoweredBy: PropTypes.bool,
   showWhatsNewLink: PropTypes.bool,
   showTerms: PropTypes.bool,

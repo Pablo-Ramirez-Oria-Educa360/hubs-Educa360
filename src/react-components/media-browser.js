@@ -6,6 +6,7 @@ import { pushHistoryPath, pushHistoryState, sluglessPath } from "../utils/histor
 import { SOURCES } from "../storage/media-search-store";
 import { showFullScreenIfWasFullScreen } from "../utils/fullscreen";
 import { AvatarUrlModalContainer } from "./room/AvatarUrlModalContainer";
+import { AvatarCreateModalContainer } from "./room/AvatarCreateModalContainer";
 import { SceneUrlModalContainer } from "./room/SceneUrlModalContainer";
 import { ObjectUrlModalContainer } from "./room/ObjectUrlModalContainer";
 import { MediaBrowser } from "./room/MediaBrowser";
@@ -17,6 +18,8 @@ import { fetchReticulumAuthenticated, getReticulumFetchUrl } from "../utils/phoe
 import { proxiedUrlFor, scaledThumbnailUrlFor } from "../utils/media-url-utils";
 import { CreateTile, MediaTile } from "./room/MediaTiles";
 import { SignInMessages } from "./auth/SignInModal";
+
+const AVATAR_MAKER_ORIGIN = "https://avatar-maker.educa360.es";
 const isMobile = AFRAME.utils.device.isMobile();
 const isThisMobileVR = AFRAME.utils.device.isMobileVR();
 
@@ -337,8 +340,66 @@ class MediaBrowserContainer extends Component {
     );
   };
 
+  openAvatarMaker = () => {
+    const { store } = this.props;
+    const token = store.state.credentials && store.state.credentials.token;
+    const userId = store.credentialsAccountId;
+
+    if (!token || !userId) return;
+
+    const win = window.open(AVATAR_MAKER_ORIGIN, "_blank", "noopener");
+    if (!win) return;
+
+    const nonce = Math.random().toString(36).slice(2);
+    const payload = {
+      type: "HUBS_AUTH",
+      version: 1,
+      token,
+      userId,
+      origin: window.location.origin,
+      returnUrl: window.location.origin,
+      nonce
+    };
+
+    let interval = null;
+    const onMessage = event => {
+      if (event.origin !== AVATAR_MAKER_ORIGIN) return;
+      const data = event.data || {};
+      if (data.type === "HUBS_AUTH_ACK" && data.version === 1 && data.nonce === nonce) {
+        clearInterval(interval);
+        window.removeEventListener("message", onMessage);
+      }
+    };
+
+    let attempts = 0;
+    const maxAttempts = 10;
+    interval = setInterval(() => {
+      if (attempts >= maxAttempts) {
+        clearInterval(interval);
+        window.removeEventListener("message", onMessage);
+      } else {
+        win.postMessage(payload, AVATAR_MAKER_ORIGIN);
+        attempts += 1;
+      }
+    }, 500);
+
+    window.addEventListener("message", onMessage);
+  };
+
+  showAvatarCreateDialog = () => {
+    const { history, showNonHistoriedDialog } = this.props;
+    showNonHistoriedDialog(AvatarCreateModalContainer, {
+      onImport: () => pushHistoryState(history, "overlay", "avatar-editor"),
+      onCreate: this.openAvatarMaker
+    });
+  };
+
   onCreateAvatar = () => {
-    window.dispatchEvent(new CustomEvent("action_create_avatar"));
+    this.props.performConditionalSignIn(
+      () => this.props.hubChannel.signedIn,
+      () => this.showAvatarCreateDialog(),
+      SignInMessages.createAvatar
+    );
   };
 
   processThumbnailUrl = (entry, thumbnailWidth, thumbnailHeight) => {
