@@ -123,7 +123,7 @@ export const SCHEMA = {
         enableOnScreenJoystickLeft: { type: "bool", default: detectMobile() },
         enableOnScreenJoystickRight: { type: "bool", default: detectMobile() },
         enableGyro: { type: "bool", default: true },
-        animateWaypointTransitions: { type: "bool", default: true },
+        animateWaypointTransitions: { type: "bool", default: false },
         showFPSCounter: { type: "bool", default: false },
         allowMultipleHubsInstances: { type: "bool", default: false },
         disableIdleDetection: { type: "bool", default: false },
@@ -345,6 +345,9 @@ export default class Store extends EventTarget {
           delete this._preferences[key];
         }
       }
+      // Force-disable waypoint transition animations and keep them out of persisted prefs.
+      state.preferences.animateWaypointTransitions = false;
+      delete this._preferences.animateWaypointTransitions;
     }
 
     return this[STORE_STATE_CACHE_KEY];
@@ -415,6 +418,8 @@ export default class Store extends EventTarget {
     }
 
     if (newState.preferences) {
+      // Enforce disablement even if callers attempt to set it.
+      finalState.preferences.animateWaypointTransitions = false;
       // clear preference if equal to default value so that, when client is updated with different defaults,
       // new defaults will apply without user action
       for (const [key, value] of Object.entries(finalState.preferences)) {

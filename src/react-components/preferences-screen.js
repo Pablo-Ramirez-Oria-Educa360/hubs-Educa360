@@ -1284,10 +1284,6 @@ class PreferencesScreen extends Component {
             prefType: PREFERENCE_LIST_ITEM_TYPE.CHECK_BOX
           },
           {
-            key: "animateWaypointTransitions",
-            prefType: PREFERENCE_LIST_ITEM_TYPE.CHECK_BOX
-          },
-          {
             key: "showFPSCounter",
             prefType: PREFERENCE_LIST_ITEM_TYPE.CHECK_BOX
           },
