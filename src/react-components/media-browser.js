@@ -158,11 +158,27 @@ class MediaBrowserContainer extends Component {
     this.props.mediaSearchStore.addEventListener("sourcechanged", this.sourceChanged);
   }
 
-  componentDidMount() {}
+  componentDidMount() {
+    this.onAvatarMakerMessage = event => {
+      if (event.origin !== AVATAR_MAKER_ORIGIN) return;
+      const data = event.data || {};
+      if (data.type !== "HUBS_AVATAR_CREATED" || data.version !== 1) return;
+
+      const searchParams = new URLSearchParams(this.props.history.location.search);
+      if (this.getUrlSource(searchParams) === "avatars") {
+        this.handleFacetClicked({ params: { filter: "my-avatars" } });
+      }
+    };
+    window.addEventListener("message", this.onAvatarMakerMessage);
+  }
 
   componentWillUnmount() {
     this.props.mediaSearchStore.removeEventListener("statechanged", this.storeUpdated);
     this.props.mediaSearchStore.removeEventListener("sourcechanged", this.sourceChanged);
+    if (this.onAvatarMakerMessage) {
+      window.removeEventListener("message", this.onAvatarMakerMessage);
+      this.onAvatarMakerMessage = null;
+    }
   }
 
   storeUpdated = () => {
