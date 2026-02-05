@@ -363,7 +363,7 @@ class MediaBrowserContainer extends Component {
 
     if (!token || !userId) return;
 
-    const win = window.open(AVATAR_MAKER_ORIGIN, "_blank", "noopener");
+    const win = window.open(AVATAR_MAKER_ORIGIN, "_blank");
     if (!win) return;
 
     const nonce = Math.random().toString(36).slice(2);
