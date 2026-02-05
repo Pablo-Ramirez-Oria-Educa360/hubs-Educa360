@@ -10,7 +10,7 @@ import { Button } from "../input/Button";
 import maskEmail from "../../utils/mask-email";
 import { AppLogo } from "../misc/AppLogo";
 
-export function MobileNav({ enableSpoke, editorName, isAdmin, isSignedIn, email, onSignOut }) {
+export function MobileNav({ enableSpoke, editorName, isAdmin, isSignedIn, email, onSignOut, onOpenAvatarMaker }) {
   const [navOpen, setNav] = useState(false);
   const toggleNav = () => setNav(!navOpen);
   const closeNav = () => setNav(false);
@@ -61,6 +61,20 @@ export function MobileNav({ enableSpoke, editorName, isAdmin, isSignedIn, email,
                 <FormattedMessage id="header.resources" defaultMessage="Resources" />
               </a>
             </li>
+            <li>
+              <a
+                href="https://avatar-maker.educa360.es"
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={e => {
+                  e.preventDefault();
+                  onOpenAvatarMaker?.();
+                  closeNav();
+                }}
+              >
+                <FormattedMessage id="header.avatar-maker" defaultMessage="Avatar Maker" />
+              </a>
+            </li>
             {isAdmin && (
               <li>
                 <a href="/admin" rel="noreferrer noopener" onClick={closeNav}>
@@ -104,5 +118,6 @@ MobileNav.propTypes = {
   isAdmin: PropTypes.bool,
   isSignedIn: PropTypes.bool,
   email: PropTypes.string,
-  onSignOut: PropTypes.func
+  onSignOut: PropTypes.func,
+  onOpenAvatarMaker: PropTypes.func
 };

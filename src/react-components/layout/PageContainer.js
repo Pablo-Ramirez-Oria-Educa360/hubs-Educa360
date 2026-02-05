@@ -10,6 +10,47 @@ import { TERMS, PRIVACY } from "../../constants";
 export function PageContainer({ children, ...rest }) {
   const auth = useContext(AuthContext);
   useAccessibleOutlineStyle();
+  const avatarMakerOrigin = "https://avatar-maker.educa360.es";
+
+  const openAvatarMaker = () => {
+    const win = window.open(avatarMakerOrigin, "_blank", "noopener");
+    if (!win) return;
+
+    const nonce = Math.random().toString(36).slice(2);
+    const payload = {
+      type: "HUBS_AUTH",
+      version: 1,
+      token: auth.token,
+      userId: auth.userId,
+      origin: window.location.origin,
+      returnUrl: window.location.origin,
+      nonce
+    };
+
+    let interval = null;
+    const onMessage = event => {
+      if (event.origin !== avatarMakerOrigin) return;
+      const data = event.data || {};
+      if (data.type === "HUBS_AUTH_ACK" && data.version === 1 && data.nonce === nonce) {
+        clearInterval(interval);
+        window.removeEventListener("message", onMessage);
+      }
+    };
+
+    let attempts = 0;
+    const maxAttempts = 10;
+    interval = setInterval(() => {
+      if (attempts >= maxAttempts) {
+        clearInterval(interval);
+        window.removeEventListener("message", onMessage);
+      } else {
+        win.postMessage(payload, avatarMakerOrigin);
+        attempts += 1;
+      }
+    }, 500);
+
+    window.addEventListener("message", onMessage);
+  };
 
   return (
     <Page
@@ -25,6 +66,7 @@ export function PageContainer({ children, ...rest }) {
       isSignedIn={auth.isSignedIn}
       email={auth.email}
       onSignOut={auth.signOut}
+      onOpenAvatarMaker={openAvatarMaker}
       hidePoweredBy={configs.feature("hide_powered_by")}
       showWhatsNewLink={configs.feature("show_whats_new_link")}
       showTerms={configs.feature("show_terms")}

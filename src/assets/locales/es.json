@@ -54,6 +54,7 @@
   "header.explore": "Explorar",
   "header.plans": "Planes",
   "header.resources": "Recursos",
+  "header.avatar-maker": "Avatar Maker",
   "sign-in-button": "Iniciar sesión / Registrarse",
   "chat-sidebar.log-message.invalid-scene-url": "Esta URL no apunta a una escena o a un archivo .GLB válido.",
   "chat-sidebar.system-message.entered-lobby": "{name} entró a la antesala.",
