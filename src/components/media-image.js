@@ -19,7 +19,9 @@ AFRAME.registerComponent("media-image", {
     projection: { type: "string", default: "flat" },
     contentType: { type: "string" },
     alphaMode: { type: "string", default: undefined },
-    alphaCutoff: { type: "number" }
+    alphaCutoff: { type: "number" },
+    // When < 1, keeps the mesh raycastable/interactive but hides the image.
+    opacity: { type: "number", default: 1 }
   },
 
   play() {
@@ -152,6 +154,15 @@ AFRAME.registerComponent("media-image", {
           this.mesh.material.alphaTest = 0;
       }
     }
+
+    // Ensure opacity is applied after alphaMode handling.
+    // If fully transparent, avoid writing to depth so it doesn't behave like an invisible occluder.
+    const opacity = typeof this.data.opacity === "number" ? this.data.opacity : 1;
+    this.mesh.material.opacity = opacity;
+    if (opacity < 1) {
+      this.mesh.material.transparent = true;
+    }
+    this.mesh.material.depthWrite = opacity >= 1;
 
     this.mesh.material.map = texture;
     this.mesh.material.needsUpdate = true;

@@ -610,5 +610,10 @@
   "tweet-editor-modal.tweet-button": "Tuitear",
   "twitter-oauth-modal.connect-button": "Conectarse a Twitter",
   "twitter-oauth-modal.message": "Conectarse a Twitter para enviar tuits desde {appName}.",
-  "ui-root.interstitial-prompt": "Continuar"
+  "ui-root.interstitial-prompt": "Continuar",
+  "open-media-button.open-link": "Abrir enlace",
+  "open-media-button.use-avatar": "Usar avatar",
+  "open-media-button.use-scene": "Usar escena",
+  "open-media-button.go-to": "Ir a",
+  "open-media-button.visit-room": "Visitar sala"
 }

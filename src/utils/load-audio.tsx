@@ -49,6 +49,15 @@ export function* loadAudio(world: HubsWorld, eid: EntityID, url: string, params:
     ></entity>
   );
 
+  // Hide the audio placeholder card (usually a black square). Keep the mesh for raycasting/menus.
+  const audioObj = world.eid2obj.get(audioEid) as any;
+  if (audioObj?.material) {
+    audioObj.material.transparent = true;
+    audioObj.material.opacity = 0;
+    audioObj.material.depthWrite = false;
+    audioObj.material.needsUpdate = true;
+  }
+
   if (isNetworked) {
     addComponent(world, Networked, audioEid);
     addComponent(world, NetworkedVideo, audioEid);

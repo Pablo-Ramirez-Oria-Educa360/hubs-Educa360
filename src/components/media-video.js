@@ -486,9 +486,17 @@ AFRAME.registerComponent("media-video", {
     }
 
     if (!texture.isVideoTexture) {
+      // Audio-only media uses the same component, but we don't want to render the black fallback card.
+      // Keep the mesh for raycasting/hover menus, but make it fully transparent and non-occluding.
       this.mesh.material.map = audioIconTexture;
+      this.mesh.material.transparent = true;
+      this.mesh.material.opacity = 0;
+      this.mesh.material.depthWrite = false;
     } else {
       this.mesh.material.map = texture;
+      this.mesh.material.transparent = false;
+      this.mesh.material.opacity = 1;
+      this.mesh.material.depthWrite = true;
       if (projection === "flat") {
         scaleToAspectRatio(
           this.el,

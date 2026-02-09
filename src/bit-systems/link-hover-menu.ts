@@ -19,6 +19,11 @@ import { changeHub } from "../change-hub";
 import { EntityID } from "../utils/networking-types";
 import { LinkType } from "../inflators/link";
 import { ObjectMenuTransformFlags } from "../inflators/object-menu-transform";
+import { getMessage } from "../utils/i18n";
+
+function t(id: string, fallback: string) {
+  return getMessage(id) || fallback;
+}
 
 const menuQuery = defineQuery([LinkHoverMenu]);
 const hoveredLinksQuery = defineQuery([HoveredRemoteRight, Link, Not(LinkInitializing)]);
@@ -105,20 +110,20 @@ function updateButtonText(world: HubsWorld, menu: EntityID, button: EntityID) {
   let label = "";
   switch (linkType) {
     case LinkType.LINK:
-      label = "open link";
+      label = t("open-media-button.open-link", "Open link");
       break;
     case LinkType.AVATAR:
-      label = "use avatar";
+      label = t("open-media-button.use-avatar", "Use avatar");
       break;
     case LinkType.SCENE:
-      label = "use scene";
+      label = t("open-media-button.use-scene", "Use scene");
       break;
     case LinkType.WAYPOINT:
-      label = "go to";
+      label = t("open-media-button.go-to", "Go to");
       break;
     case LinkType.ROOM:
     case LinkType.ROOM_URL:
-      label = "visit room";
+      label = t("open-media-button.visit-room", "Visit room");
       break;
   }
   textObj.text = label;

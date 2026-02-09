@@ -33,6 +33,10 @@ import { MediaContentBounds } from "../bit-components";
 
 let loadingObject;
 
+// 1x1 transparent PNG. Used to avoid requiring a thumbnail for link/teleport cards.
+const TRANSPARENT_PNG =
+  "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+X9Z0AAAAASUVORK5CYII=";
+
 waitForDOMContentLoaded().then(() => {
   loadModel(loadingObjectSrc).then(gltf => {
     loadingObject = gltf;
@@ -569,17 +573,34 @@ AFRAME.registerComponent("media-loader", {
         this.el.removeAttribute("audio-zone-source");
         this.el.removeAttribute("media-pdf");
         this.el.removeAttribute("media-pager");
+
+        const mayChangeScene = this.el.sceneEl.systems.permissions.can("update_hub");
+        const isAvatarLink = await isLocalHubsAvatarUrl(src);
+        const hubId = await isHubsRoomUrl(src);
+        const isRoomLink = !!hubId;
+        const isSceneLink = await isLocalHubsSceneUrl(src);
+        const isDestinationLink = isRoomLink || (isSceneLink && mayChangeScene);
+
+        // "Teleport" links are room URLs pointing to the current hub with a waypoint hash.
+        // Hide the destination thumbnail so only the button remains.
+        let isTeleportLink = false;
+        if (isRoomLink) {
+          const url = new URL(src);
+          isTeleportLink = !!url.hash && window.APP?.hub?.hub_id === hubId;
+        }
+
+        const shouldHideImage = isTeleportLink || !thumbnail;
+        // If we're hiding the image anyway, don't fetch the thumbnail.
+        const imageSrc = shouldHideImage ? TRANSPARENT_PNG : thumbnail;
         this.el.addEventListener(
           "image-loaded",
-          async () => {
-            const mayChangeScene = this.el.sceneEl.systems.permissions.can("update_hub");
-
-            if (await isLocalHubsAvatarUrl(src)) {
+          () => {
+            if (isAvatarLink) {
               this.el.setAttribute("hover-menu__hubs-item", {
                 template: "#avatar-link-hover-menu",
                 isFlat: true
               });
-            } else if ((await isHubsRoomUrl(src)) || ((await isLocalHubsSceneUrl(src)) && mayChangeScene)) {
+            } else if (isDestinationLink) {
               this.el.setAttribute("hover-menu__hubs-item", {
                 template: "#hubs-destination-hover-menu",
                 isFlat: true
@@ -595,9 +616,10 @@ AFRAME.registerComponent("media-loader", {
         this.el.setAttribute(
           "media-image",
           Object.assign({}, this.data.mediaOptions, {
-            src: thumbnail,
+            src: imageSrc,
             version,
-            contentType: guessContentType(thumbnail) || "image/png"
+            contentType: guessContentType(imageSrc) || "image/png",
+            opacity: shouldHideImage ? 0 : 1
           })
         );
         if (this.el.components["position-at-border__freeze"]) {

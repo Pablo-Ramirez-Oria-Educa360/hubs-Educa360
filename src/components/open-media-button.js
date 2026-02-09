@@ -2,6 +2,11 @@ import { isLocalHubsUrl, isLocalHubsSceneUrl, isHubsRoomUrl, isLocalHubsAvatarUr
 import { guessContentType } from "../utils/media-url-utils";
 import { handleExitTo2DInterstitial } from "../utils/vr-interstitial";
 import { changeHub } from "../change-hub";
+import { getMessage } from "../utils/i18n";
+
+function t(id, fallback) {
+  return getMessage(id) || fallback;
+}
 
 AFRAME.registerComponent("open-media-button", {
   schema: {
@@ -11,7 +16,7 @@ AFRAME.registerComponent("open-media-button", {
     this.label = this.el.querySelector("[text]");
 
     this.updateSrc = async () => {
-      if (!this.targetEl.parentNode) return; // If removed
+      if (!this.targetEl || !this.targetEl.parentNode) return; // If removed/not ready
       const mediaLoader = this.targetEl.components["media-loader"].data;
       const src = (this.src = (mediaLoader.mediaOptions && mediaLoader.mediaOptions.href) || mediaLoader.src);
       const visible = src && guessContentType(src) !== "video/vnd.hubs-webrtc";
@@ -20,19 +25,19 @@ AFRAME.registerComponent("open-media-button", {
       this.el.object3D.visible = !!visible;
 
       if (visible) {
-        let label = "open link";
+        let label = t("open-media-button.open-link", "open link");
         if (!this.data.onlyOpenLink) {
           let hubId;
           if (await isLocalHubsAvatarUrl(src)) {
-            label = "use avatar";
+            label = t("open-media-button.use-avatar", "use avatar");
           } else if ((await isLocalHubsSceneUrl(src)) && mayChangeScene) {
-            label = "use scene";
+            label = t("open-media-button.use-scene", "use scene");
           } else if ((hubId = await isHubsRoomUrl(src))) {
             const url = new URL(src);
             if (url.hash && window.APP.hub.hub_id === hubId) {
-              label = "go to";
+              label = t("open-media-button.go-to", "go to");
             } else {
-              label = "visit room";
+              label = t("open-media-button.visit-room", "visit room");
             }
           }
         }
@@ -82,6 +87,14 @@ AFRAME.registerComponent("open-media-button", {
         this.updateSrc();
       })
       .catch(() => {});
+
+    // Ensure translated label updates once locale is resolved/changed.
+    this.onLocaleUpdated = () => this.updateSrc();
+    window.addEventListener("locale-updated", this.onLocaleUpdated);
+  },
+
+  remove() {
+    window.removeEventListener("locale-updated", this.onLocaleUpdated);
   },
 
   play() {
