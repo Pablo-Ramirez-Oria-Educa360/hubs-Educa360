@@ -8,7 +8,7 @@ type CameraPrefabT = () => EntityDef;
 type CubeMediaPrefabT = () => EntityDef;
 type MediaPrefabT = (params: MediaLoaderParams) => EntityDef;
 
-type Permission =
+export type Permission =
   | "spawn_camera"
   | "spawn_and_move_media"
   | "update_hub"
