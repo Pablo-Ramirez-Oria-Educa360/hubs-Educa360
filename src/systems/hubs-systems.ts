@@ -198,6 +198,10 @@ export function mainTick(xrFrame: XRFrame, renderer: WebGLRenderer, scene: Scene
     aframeSystems[systemNames[i]].tick(t, dt);
   }
 
+  APP.addon_systems.setup.forEach(systemConfig => {
+    systemConfig.system(APP);
+  });
+
   networkReceiveSystem(world);
   onOwnershipLost(world);
   sceneLoadingSystem(world, hubsSystems.environmentSystem, hubsSystems.characterController);
@@ -212,6 +216,10 @@ export function mainTick(xrFrame: XRFrame, renderer: WebGLRenderer, scene: Scene
 
   buttonSystems(world);
   sfxButtonSystem(world, aframeSystems["hubs-systems"].soundEffectsSystem);
+
+  APP.addon_systems.prePhysics.forEach(systemConfig => {
+    systemConfig.system(APP);
+  });
 
   physicsCompatSystem(world, hubsSystems.physicsSystem);
   hubsSystems.physicsSystem.tick(dt);
@@ -303,6 +311,10 @@ export function mainTick(xrFrame: XRFrame, renderer: WebGLRenderer, scene: Scene
   bitPenCompatSystem(world, aframeSystems["pen-tools"]);
   snapMediaSystem(world, aframeSystems["hubs-systems"].soundEffectsSystem);
 
+  APP.addon_systems.postPhysics.forEach(systemConfig => {
+    systemConfig.system(APP);
+  });
+
   deleteEntitySystem(world, aframeSystems.userinput);
   destroyAtExtremeDistanceSystem(world);
   removeNetworkedObjectButtonSystem(world);
@@ -318,14 +330,27 @@ export function mainTick(xrFrame: XRFrame, renderer: WebGLRenderer, scene: Scene
     networkDebugSystem(world, scene);
   }
 
+  APP.addon_systems.beforeMatricesUpdate.forEach(systemConfig => {
+    systemConfig.system(APP);
+  });
+
   scene.updateMatrixWorld();
 
   renderer.info.reset();
+
+  APP.addon_systems.beforeRender.forEach(systemConfig => {
+    systemConfig.system(APP);
+  });
+
   if (APP.fx.composer) {
     APP.fx.composer.render();
   } else {
     renderer.render(scene, camera);
   }
+
+  APP.addon_systems.afterRender.forEach(systemConfig => {
+    systemConfig.system(APP);
+  });
 
   // tock()s on components and system will fire here. (As well as any other time render() is called without unbinding onAfterRender)
   // TODO inline invoking tocks instead of using onAfterRender registered in a-scene

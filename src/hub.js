@@ -272,6 +272,7 @@ import { exposeBitECSDebugHelpers } from "./bitecs-debug-helpers";
 import { loadLegacyRoomObjects } from "./utils/load-legacy-room-objects";
 import { loadSavedEntityStates } from "./utils/entity-state-utils";
 import { shouldUseNewLoader } from "./utils/bit-utils";
+import { addons } from "./addons";
 
 const PHOENIX_RELIABLE_NAF = "phx-reliable";
 NAF.options.firstSyncSource = PHOENIX_RELIABLE_NAF;
@@ -542,8 +543,18 @@ export async function updateEnvironmentForHub(hub, entryManager) {
   }
 }
 
-export async function updateUIForHub(hub, hubChannel, showBitECSBasedClientRefreshPrompt = false) {
-  remountUI({ hub, entryDisallowed: !hubChannel.canEnterRoom(hub), showBitECSBasedClientRefreshPrompt });
+export async function updateUIForHub(
+  hub,
+  hubChannel,
+  showBitECSBasedClientRefreshPrompt = false,
+  showAddonRefreshPrompt = false
+) {
+  remountUI({
+    hub,
+    entryDisallowed: !hubChannel.canEnterRoom(hub),
+    showBitECSBasedClientRefreshPrompt,
+    showAddonRefreshPrompt
+  });
 }
 
 function onConnectionError(entryManager, connectError) {
@@ -1396,8 +1407,20 @@ document.addEventListener("DOMContentLoaded", async () => {
       }, 5000);
     }
 
+    let showAddonRefreshPrompt = false;
+    [...addons.keys()].forEach(id => {
+      const oldAddonState = !!APP.hub.user_data && "addons" in APP.hub.user_data && APP.hub.user_data.addons[id];
+      const newAddonState = !!hub.user_data && "addons" in hub.user_data && hub.user_data.addons[id];
+      if (newAddonState !== oldAddonState) {
+        showAddonRefreshPrompt = true;
+        setTimeout(() => {
+          document.location.reload();
+        }, 5000);
+      }
+    });
+
     window.APP.hub = hub;
-    updateUIForHub(hub, hubChannel, showBitECSBasedClientRefreshPrompt);
+    updateUIForHub(hub, hubChannel, showBitECSBasedClientRefreshPrompt, showAddonRefreshPrompt);
 
     if (
       stale_fields.includes("scene") ||

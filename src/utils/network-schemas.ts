@@ -1,10 +1,11 @@
 import { Component } from "bitecs";
 import { HubsWorld } from "../app";
 import {
-  $isStringType,
   NetworkedFloatyObject,
   NetworkedMediaFrame,
   NetworkedPDF,
+  NetworkedRigidBody,
+  NetworkedText,
   NetworkedTransform,
   NetworkedVideo,
   NetworkedWaypoint
@@ -12,6 +13,8 @@ import {
 import { defineNetworkSchema } from "./define-network-schema";
 import { NetworkedMediaFrameSchema } from "./networked-media-frame-schema";
 import { NetworkedPDFSchema } from "./networked-pdf-schema";
+import { NetworkedRigidBodySchema } from "./networked-rigid-body";
+import { NetworkedTextSchema } from "./networked-text-schema";
 import { NetworkedTransformSchema } from "./networked-transform-schema";
 import { NetworkedVideoSchema } from "./networked-video-schema";
 import { NetworkedWaypointSchema } from "./networked-waypoint-schema";
@@ -46,22 +49,23 @@ schemas.set(NetworkedFloatyObject, {
   ...defineNetworkSchema(NetworkedFloatyObject)
 });
 schemas.set(NetworkedPDF, NetworkedPDFSchema);
+schemas.set(NetworkedText, NetworkedTextSchema);
+schemas.set(NetworkedRigidBody, NetworkedRigidBodySchema);
 
 export const networkableComponents = Array.from(schemas.keys());
 
 export function read(prop: any, eid: EntityID) {
   if (ArrayBuffer.isView(prop[eid])) {
     return Array.from(prop[eid]);
-  } else {
-    return prop[$isStringType] ? APP.getString(prop[eid]) : prop[eid];
   }
+  return prop[eid];
 }
 
 export function write(prop: any, eid: EntityID, value: any) {
   if (ArrayBuffer.isView(prop[eid])) {
     prop[eid].set(value);
   } else {
-    prop[eid] = prop[$isStringType] ? APP.getString(value) : value;
+    prop[eid] = value;
   }
 }
 

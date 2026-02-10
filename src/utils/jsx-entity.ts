@@ -57,7 +57,7 @@ import { inflateLink, LinkParams } from "../inflators/link";
 import { inflateLinkLoader, LinkLoaderParams } from "../inflators/link-loader";
 import { inflateLoopAnimationInitialize, LoopAnimationParams } from "../inflators/loop-animation";
 import { inflateSlice9 } from "../inflators/slice9";
-import { TextParams, inflateText } from "../inflators/text";
+import { TextParams, inflateGLTFText, inflateText } from "../inflators/text";
 import {
   BackgroundParams,
   EnvironmentSettingsParams,
@@ -445,7 +445,7 @@ export const commonInflators: Required<{ [K in keyof ComponentData]: InflatorFn 
   text: inflateText
 };
 
-const jsxInflators: Required<{ [K in keyof JSXComponentData]: InflatorFn }> = {
+export const jsxInflators: Required<{ [K in keyof JSXComponentData]: InflatorFn }> = {
   ...commonInflators,
   cursorRaycastable: createDefaultInflator(CursorRaycastable),
   remoteHoverTarget: createDefaultInflator(RemoteHoverTarget),
@@ -533,7 +533,8 @@ export const gltfInflators: Required<{ [K in keyof GLTFComponentData]: InflatorF
   trimesh: inflateTrimesh,
   heightfield: inflateHeightField,
   audioSettings: inflateAudioSettings,
-  mediaLink: inflateMediaLink
+  mediaLink: inflateMediaLink,
+  text: inflateGLTFText
 };
 
 function jsxInflatorExists(name: string): name is keyof JSXComponentData {

@@ -7,11 +7,20 @@ import { mapMaterials } from "../utils/material-utils";
 import { EntityID } from "../utils/networking-types";
 import { inflateLoopAnimationInitialize, LoopAnimationParams } from "./loop-animation";
 
-function camelCase(s: string) {
+export function camelCase(s: string) {
   return s.replace(/-(\w)/g, (_, m) => m.toUpperCase());
 }
 
 export type ModelParams = { model: Object3D };
+
+export type GLTFLinkResolverFn = (
+  world: HubsWorld,
+  model: Object3D,
+  rootEid: EntityID,
+  idx2eid: Map<number, EntityID>
+) => void;
+
+export const gltfLinkResolvers = new Array<GLTFLinkResolverFn>();
 
 // These components are all handled in some special way, not through inflators
 const ignoredComponents = [
@@ -24,7 +33,7 @@ const ignoredComponents = [
   "loop-animation"
 ];
 
-function inflateComponents(
+export function inflateComponents(
   world: HubsWorld,
   eid: number,
   components: { [componentName: string]: any },
@@ -165,6 +174,8 @@ export function inflateModel(world: HubsWorld, rootEid: number, { model }: Model
     addComponent(world, MixerAnimatableInitialize, rootEid);
     inflateLoopAnimationInitialize(world, rootEid, loopAnimationParams);
   }
+
+  gltfLinkResolvers.forEach(resolver => resolver(world, model, rootEid, idx2eid));
 
   addComponent(world, GLTFModel, rootEid);
 }

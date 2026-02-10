@@ -20,6 +20,7 @@ import { canShare, shareInviteUrl } from "../../utils/share";
 import { ReactComponent as ShareIcon } from "../icons/Share.svg";
 import { Checkbox } from "@mozilla/lilypad-ui";
 import configs from "../../utils/configs";
+import { addons, isAddonEnabled } from "../../addons";
 
 export function RoomSettingsSidebar({
   showBackButton,
@@ -48,6 +49,8 @@ export function RoomSettingsSidebar({
 
   const entryMode = watch("entry_mode");
   const spawnAndMoveMedia = watch("member_permissions.spawn_and_move_media");
+  const bitecsClientEnabledValue = watch("user_data.hubs_use_bitecs_based_client");
+  const bitecsClientEnabled = bitecsClientEnabledValue ?? room?.user_data?.hubs_use_bitecs_based_client ?? false;
 
   useEffect(() => {
     if (!spawnAndMoveMedia) {
@@ -253,6 +256,46 @@ export function RoomSettingsSidebar({
             }
             {...register("user_data.hubs_use_bitecs_based_client")}
           />
+        </InputField>
+        <InputField
+          label={<FormattedMessage id="room-settings-sidebar.add-ons" defaultMessage="Add-ons" />}
+          description={
+            !bitecsClientEnabled ? (
+              <FormattedMessage
+                id="room-settings-sidebar.add-ons-disabled-description"
+                defaultMessage="Add-ons require that the bitECS based client is enabled."
+              />
+            ) : addons.size === 0 ? (
+              <FormattedMessage id="room-settings-sidebar.add-ons-none" defaultMessage="No add-ons installed." />
+            ) : undefined
+          }
+          fullWidth
+        >
+          {addons.size > 0 && (
+            <div className={styles.roomPermissions}>
+              {Array.from(addons.entries())
+                .sort((a, b) => a[1].name.localeCompare(b[1].name))
+                .map(([id, addon]) => {
+                  const roomAddonSettings = room?.user_data?.addons;
+                  const hasRoomValue =
+                    !!roomAddonSettings && Object.prototype.hasOwnProperty.call(roomAddonSettings, id);
+
+                  const app = typeof APP !== "undefined" ? APP : null;
+                  const defaultChecked = !hasRoomValue && app ? isAddonEnabled(app, id) : undefined;
+
+                  return (
+                    <ToggleInput
+                      key={id}
+                      label={addon.name}
+                      description={addon.description}
+                      disabled={!bitecsClientEnabled}
+                      defaultChecked={defaultChecked}
+                      {...register(`user_data.addons.${id}`)}
+                    />
+                  );
+                })}
+            </div>
+          )}
         </InputField>
         <ApplyButton type="submit" />
       </Column>

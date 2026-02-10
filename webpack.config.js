@@ -285,6 +285,16 @@ module.exports = async (env, argv) => {
     // .replaceAll("connect-src", "connect-src https://example.com");
   }
 
+  // Add-ons are bundled at build time and loaded in the hub entrypoint.
+  // If addons.json is missing, default to no add-ons.
+  const addonsConfigFilePath = path.resolve(__dirname, "addons.json");
+  let addonsConfig = { addons: [] };
+  try {
+    addonsConfig = JSON.parse(fs.readFileSync(addonsConfigFilePath, "utf-8"));
+  } catch (e) {
+    console.warn(`No addons.json found or invalid JSON. Continuing without add-ons. (${e?.message || e})`);
+  }
+
   const internalHostname = process.env.INTERNAL_HOSTNAME || "hubs.local";
   return {
     cache: {
@@ -314,7 +324,8 @@ module.exports = async (env, argv) => {
         "three/examples/js/libs/basis/basis_transcoder.js": basisTranscoderPath,
         "three/examples/js/libs/draco/gltf/draco_wasm_wrapper.js": dracoWasmWrapperPath,
         "three/examples/js/libs/basis/basis_transcoder.wasm": basisWasmPath,
-        "three/examples/js/libs/draco/gltf/draco_decoder.wasm": dracoWasmPath
+        "three/examples/js/libs/draco/gltf/draco_decoder.wasm": dracoWasmPath,
+        hubs$: path.resolve(__dirname, "./src/hubs.js")
       },
       // Allows using symlinks in node_modules
       symlinks: false,
@@ -332,7 +343,7 @@ module.exports = async (env, argv) => {
     entry: {
       support: path.join(__dirname, "src", "support.js"),
       index: path.join(__dirname, "src", "index.js"),
-      hub: path.join(__dirname, "src", "hub.js"),
+      hub: [path.join(__dirname, "src", "hub.js"), ...(addonsConfig.addons || [])],
       scene: path.join(__dirname, "src", "scene.js"),
       avatar: path.join(__dirname, "src", "avatar.js"),
       link: path.join(__dirname, "src", "link.js"),

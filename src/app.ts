@@ -19,6 +19,7 @@ import {
   PositionalAudio,
   Scene,
   sRGBEncoding,
+  Texture,
   WebGLRenderer
 } from "three";
 import { AudioSettings, SourceType } from "./components/audio-params";
@@ -30,6 +31,8 @@ import SceneEntryManager from "./scene-entry-manager";
 import { store } from "./utils/store-instance";
 import { addObject3DComponent } from "./utils/jsx-entity";
 import { ElOrEid } from "./utils/bit-utils";
+import { onAddonsInit } from "./addons";
+import type { CoreSystemKeyT, HubsSystemKeyT, SystemConfigT, SystemKeyT, SystemT } from "./types";
 
 declare global {
   interface Window {
@@ -52,6 +55,7 @@ export interface HubsWorld extends IWorld {
   nid2eid: Map<number, number>;
   eid2obj: Map<number, Object3D>;
   eid2mat: Map<number, Material>;
+  eid2tex: Map<number, Texture>;
   time: { delta: number; elapsed: number; tick: number };
 }
 
@@ -104,6 +108,22 @@ export class App {
 
   dialog = new DialogAdapter();
 
+  addon_systems: {
+    setup: Array<SystemConfigT>;
+    prePhysics: Array<SystemConfigT>;
+    postPhysics: Array<SystemConfigT>;
+    beforeMatricesUpdate: Array<SystemConfigT>;
+    beforeRender: Array<SystemConfigT>;
+    afterRender: Array<SystemConfigT>;
+  } = {
+    setup: new Array<{ order: number; system: SystemT }>(),
+    prePhysics: new Array<{ order: number; system: SystemT }>(),
+    postPhysics: new Array<{ order: number; system: SystemT }>(),
+    beforeMatricesUpdate: new Array<{ order: number; system: SystemT }>(),
+    beforeRender: new Array<{ order: number; system: SystemT }>(),
+    afterRender: new Array<{ order: number; system: SystemT }>()
+  };
+
   RENDER_ORDER = {
     HUD_BACKGROUND: 1,
     HUD_ICONS: 2,
@@ -121,6 +141,7 @@ export class App {
     // TODO: Create accessor / update methods for these maps / set
     this.world.eid2obj = new Map();
     this.world.eid2mat = new Map();
+    this.world.eid2tex = new Map();
 
     this.world.nid2eid = new Map();
     this.world.deletedNids = new Set();
@@ -157,6 +178,21 @@ export class App {
 
   getString(sid: number) {
     return this.sid2str.get(sid);
+  }
+
+  notifyOnInit() {
+    onAddonsInit(this);
+  }
+
+  getSystem(id: SystemKeyT) {
+    const systems = this.scene?.systems!;
+    if (!systems) return undefined;
+
+    if (id in systems) {
+      return systems[id as CoreSystemKeyT];
+    } else {
+      return systems["hubs-systems"][id as HubsSystemKeyT];
+    }
   }
 
   // This gets called by a-scene to setup the renderer, camera, and audio listener
@@ -216,6 +252,8 @@ export class App {
     const scene = sceneEl.object3D;
     this.world.scene = scene;
     resolvePromiseToScene(scene);
+
+    this.notifyOnInit();
 
     // We manually call scene.updateMatrixWolrd in mainTick
     scene.autoUpdate = false;
