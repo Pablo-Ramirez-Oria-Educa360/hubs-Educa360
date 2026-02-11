@@ -93,7 +93,12 @@ import { inflateAudioParams } from "../inflators/audio-params";
 import { AudioSourceParams, inflateAudioSource } from "../inflators/audio-source";
 import { AudioTargetParams, inflateAudioTarget } from "../inflators/audio-target";
 import { PhysicsShapeParams, inflatePhysicsShape } from "../inflators/physics-shape";
-import { inflateGLTFRigidBody, inflateRigidBody, RigidBodyParams } from "../inflators/rigid-body";
+import {
+  GLTFRigidBodyParams,
+  inflateGLTFRigidBody,
+  inflateRigidBody,
+  RigidBodyParams
+} from "../inflators/rigid-body";
 import { AmmoShapeParams, inflateAmmoShape } from "../inflators/ammo-shape";
 import { BoxColliderParams, inflateBoxCollider } from "../inflators/box-collider";
 import { inflateTrimesh } from "../inflators/trimesh";
@@ -399,6 +404,8 @@ export interface GLTFComponentData extends ComponentData {
   audioTarget: AudioTargetParams;
   audioSettings: SceneAudioSettings;
   mediaLink: MediaLinkParams;
+  rigidbody?: OptionalParams<GLTFRigidBodyParams>;
+  physicsShape?: AmmoShapeParams;
 
   // deprecated
   spawnPoint?: true;
