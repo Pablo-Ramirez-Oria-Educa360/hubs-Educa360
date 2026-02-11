@@ -507,6 +507,19 @@ class GLTFHubsPlugin {
         }
       }
     }
+
+    // Add-ons can reference materials by glTF index (mhc links). Ensure material
+    // dependencies carry their source index in userData through extras.
+    const materials = parser.json.materials;
+    if (materials) {
+      for (let i = 0; i < materials.length; i++) {
+        const material = materials[i];
+        if (!material.extras) {
+          material.extras = {};
+        }
+        material.extras.gltfIndex = i;
+      }
+    }
   }
 
   afterRoot(gltf) {

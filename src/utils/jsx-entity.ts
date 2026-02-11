@@ -93,7 +93,7 @@ import { inflateAudioParams } from "../inflators/audio-params";
 import { AudioSourceParams, inflateAudioSource } from "../inflators/audio-source";
 import { AudioTargetParams, inflateAudioTarget } from "../inflators/audio-target";
 import { PhysicsShapeParams, inflatePhysicsShape } from "../inflators/physics-shape";
-import { inflateRigidBody, RigidBodyParams } from "../inflators/rigid-body";
+import { inflateGLTFRigidBody, inflateRigidBody, RigidBodyParams } from "../inflators/rigid-body";
 import { AmmoShapeParams, inflateAmmoShape } from "../inflators/ammo-shape";
 import { BoxColliderParams, inflateBoxCollider } from "../inflators/box-collider";
 import { inflateTrimesh } from "../inflators/trimesh";
@@ -534,6 +534,8 @@ export const gltfInflators: Required<{ [K in keyof GLTFComponentData]: InflatorF
   heightfield: inflateHeightField,
   audioSettings: inflateAudioSettings,
   mediaLink: inflateMediaLink,
+  rigidbody: inflateGLTFRigidBody,
+  physicsShape: inflateAmmoShape,
   text: inflateGLTFText
 };
 

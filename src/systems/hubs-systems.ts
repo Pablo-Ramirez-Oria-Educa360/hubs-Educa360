@@ -110,6 +110,20 @@ const timeSystem = (world: HubsWorld) => {
 };
 
 const enableNetworkDebug = qsTruthy("networkDebug");
+const loggedAddonSystemFailures = new WeakSet<(app: typeof APP) => void>();
+
+function runAddonSystems(slotName: string, systems: Array<{ order: number; system: (app: typeof APP) => void }>) {
+  systems.forEach(systemConfig => {
+    try {
+      systemConfig.system(APP);
+    } catch (error) {
+      if (!loggedAddonSystemFailures.has(systemConfig.system)) {
+        loggedAddonSystemFailures.add(systemConfig.system);
+        console.error(`Add-on system failed in slot '${slotName}' (order ${systemConfig.order}).`, error);
+      }
+    }
+  });
+}
 
 // NOTE keeping this around since many things index into it to get a reference to a system. This will
 // naturally burn down as we migrate things, so it is not worth going through and changing all of them.
@@ -199,9 +213,7 @@ export function mainTick(xrFrame: XRFrame, renderer: WebGLRenderer, scene: Scene
     aframeSystems[systemNames[i]].tick(t, dt);
   }
 
-  APP.addon_systems.setup.forEach(systemConfig => {
-    systemConfig.system(APP);
-  });
+  runAddonSystems("setup", APP.addon_systems.setup);
 
   networkReceiveSystem(world);
   onOwnershipLost(world);
@@ -218,9 +230,7 @@ export function mainTick(xrFrame: XRFrame, renderer: WebGLRenderer, scene: Scene
   buttonSystems(world);
   sfxButtonSystem(world, aframeSystems["hubs-systems"].soundEffectsSystem);
 
-  APP.addon_systems.prePhysics.forEach(systemConfig => {
-    systemConfig.system(APP);
-  });
+  runAddonSystems("prePhysics", APP.addon_systems.prePhysics);
 
   physicsCompatSystem(world, hubsSystems.physicsSystem);
   hubsSystems.physicsSystem.tick(dt);
@@ -313,9 +323,7 @@ export function mainTick(xrFrame: XRFrame, renderer: WebGLRenderer, scene: Scene
   bitPenCompatSystem(world, aframeSystems["pen-tools"]);
   snapMediaSystem(world, aframeSystems["hubs-systems"].soundEffectsSystem);
 
-  APP.addon_systems.postPhysics.forEach(systemConfig => {
-    systemConfig.system(APP);
-  });
+  runAddonSystems("postPhysics", APP.addon_systems.postPhysics);
 
   deleteEntitySystem(world, aframeSystems.userinput);
   destroyAtExtremeDistanceSystem(world);
@@ -332,17 +340,13 @@ export function mainTick(xrFrame: XRFrame, renderer: WebGLRenderer, scene: Scene
     networkDebugSystem(world, scene);
   }
 
-  APP.addon_systems.beforeMatricesUpdate.forEach(systemConfig => {
-    systemConfig.system(APP);
-  });
+  runAddonSystems("beforeMatricesUpdate", APP.addon_systems.beforeMatricesUpdate);
 
   scene.updateMatrixWorld();
 
   renderer.info.reset();
 
-  APP.addon_systems.beforeRender.forEach(systemConfig => {
-    systemConfig.system(APP);
-  });
+  runAddonSystems("beforeRender", APP.addon_systems.beforeRender);
 
   if (APP.fx.composer) {
     APP.fx.composer.render();
@@ -350,9 +354,7 @@ export function mainTick(xrFrame: XRFrame, renderer: WebGLRenderer, scene: Scene
     renderer.render(scene, camera);
   }
 
-  APP.addon_systems.afterRender.forEach(systemConfig => {
-    systemConfig.system(APP);
-  });
+  runAddonSystems("afterRender", APP.addon_systems.afterRender);
 
   // tock()s on components and system will fire here. (As well as any other time render() is called without unbinding onAfterRender)
   // TODO inline invoking tocks instead of using onAfterRender registered in a-scene
