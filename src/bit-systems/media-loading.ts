@@ -270,7 +270,7 @@ function* loadByMediaType(
       throw new UnsupportedMediaTypeError(eid, mediaType);
   }
 
-  if (hasComponent(world, MediaLink, eid)) {
+  if (hasComponent(world, MediaLink, eid) && mediaType !== MediaType.AUDIO) {
     inflateLink(world, mediaEid, { href: APP.getString(MediaLink.src[eid])!, type: LinkType.LINK });
     inflateGrabbable(world, mediaEid, { cursor: true, hand: false });
   }
