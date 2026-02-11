@@ -1,5 +1,5 @@
 import { hasComponent, removeEntity } from "bitecs";
-import { forEachMaterial } from "./material-utils";
+import { disposeTexture, forEachMaterial } from "./material-utils";
 
 const tempVector3 = new THREE.Vector3();
 const tempQuaternion = new THREE.Quaternion();
@@ -23,16 +23,16 @@ export function getLastWorldScale(src, target) {
 }
 
 export function disposeMaterial(mtrl) {
-  if (mtrl.map) mtrl.map.dispose();
-  if (mtrl.lightMap) mtrl.lightMap.dispose();
-  if (mtrl.bumpMap) mtrl.bumpMap.dispose();
-  if (mtrl.normalMap) mtrl.normalMap.dispose();
-  if (mtrl.specularMap) mtrl.specularMap.dispose();
-  if (mtrl.envMap) mtrl.envMap.dispose();
-  if (mtrl.aoMap) mtrl.aoMap.dispose();
-  if (mtrl.metalnessMap) mtrl.metalnessMap.dispose();
-  if (mtrl.roughnessMap) mtrl.roughnessMap.dispose();
-  if (mtrl.emissiveMap) mtrl.emissiveMap.dispose();
+  if (mtrl.map) disposeTexture(mtrl.map);
+  if (mtrl.lightMap) disposeTexture(mtrl.lightMap);
+  if (mtrl.bumpMap) disposeTexture(mtrl.bumpMap);
+  if (mtrl.normalMap) disposeTexture(mtrl.normalMap);
+  if (mtrl.specularMap) disposeTexture(mtrl.specularMap);
+  if (mtrl.envMap) disposeTexture(mtrl.envMap);
+  if (mtrl.aoMap) disposeTexture(mtrl.aoMap);
+  if (mtrl.metalnessMap) disposeTexture(mtrl.metalnessMap);
+  if (mtrl.roughnessMap) disposeTexture(mtrl.roughnessMap);
+  if (mtrl.emissiveMap) disposeTexture(mtrl.emissiveMap);
   mtrl.dispose();
   if (mtrl.eid) {
     removeEntity(APP.world, mtrl.eid);

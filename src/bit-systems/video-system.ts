@@ -16,7 +16,6 @@ import {
   AudioSettingsChanged,
   MediaInfo,
   MediaLoaded,
-  MediaRoot,
   MediaVideo,
   MediaVideoData,
   MediaVideoUpdated,
@@ -79,17 +78,22 @@ function* loadSrc(
   MediaVideo.ratio[eid] = ratio;
   MediaVideoData.set(eid, video);
   oldVideo.pause();
-  const mediaRoot = findAncestorWithComponent(world, MediaRoot, eid)!;
-  const mediaRootObj = world.eid2obj.get(mediaRoot)!;
-  mediaRootObj.add(videoObj);
+  oldVideo.src = "";
+  oldVideo.load();
+
+  const oldVideoObj = APP.world.eid2obj.get(eid)! as Mesh;
+  const parentObj = oldVideoObj.parent;
+  if (!parentObj) {
+    throw new Error("media/video-system: video object has no parent while updating source.");
+  }
+  parentObj.add(videoObj);
 
   const audioEmitter = findChildWithComponent(world, AudioEmitter, eid)!;
   swapAudioSrc(world, eid, audioEmitter);
   const audioObj = APP.world.eid2obj.get(audioEmitter)!;
   videoObj.add(audioObj);
 
-  const oldVideoObj = APP.world.eid2obj.get(eid)! as Mesh;
-  mediaRootObj.remove(oldVideoObj);
+  parentObj.remove(oldVideoObj);
   disposeNode(oldVideoObj);
 
   swapObject3DComponent(world, eid, videoObj);
