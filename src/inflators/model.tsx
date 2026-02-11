@@ -172,7 +172,20 @@ export function inflateModel(world: HubsWorld, rootEid: number, { model }: Model
   // See https://github.com/Hubs-Foundation/hubs/pull/5938#discussion_r1163410185
   if (model.animations !== undefined && model.animations.length > 0) {
     addComponent(world, MixerAnimatableInitialize, rootEid);
-    inflateLoopAnimationInitialize(world, rootEid, loopAnimationParams);
+
+    // Behavior Graph models should own animation control completely.
+    // For non-behavior assets, keep legacy loop-animation behavior.
+    let hasBehaviorGraph = !!model.userData?.behaviorGraph;
+    if (!hasBehaviorGraph) {
+      model.traverse(obj => {
+        if (obj.userData?.behaviorGraph) {
+          hasBehaviorGraph = true;
+        }
+      });
+    }
+    if (!hasBehaviorGraph) {
+      inflateLoopAnimationInitialize(world, rootEid, loopAnimationParams);
+    }
   }
 
   gltfLinkResolvers.forEach(resolver => resolver(world, model, rootEid, idx2eid));
