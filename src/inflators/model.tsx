@@ -22,6 +22,60 @@ export type GLTFLinkResolverFn = (
 
 export const gltfLinkResolvers = new Array<GLTFLinkResolverFn>();
 
+type BehaviorGraphNode = {
+  type?: unknown;
+  typeName?: unknown;
+  configuration?: Record<string, unknown>;
+};
+
+const networkedByDefaultNodeTypes = new Set([
+  "animation/createAnimationAction",
+  "animation/play",
+  "animation/stop",
+  "animation/crossfadeTo",
+  "three/animation/setTimescale",
+  "media/mediaPlayback",
+  "material/property/set",
+  "material/set",
+  "media_frame/setMediaFrameProperty",
+  "text/setTextProperties",
+  "networkedVariable/set"
+]);
+
+function shouldDefaultNodeToNetworked(nodeType: string) {
+  return nodeType.startsWith("hubs/entity/set/") || networkedByDefaultNodeTypes.has(nodeType);
+}
+
+function applyBehaviorGraphNetworkingDefaults(model: Object3D) {
+  const graph = model.userData?.behaviorGraph as { nodes?: unknown[] | Record<string, unknown> } | undefined;
+  if (!graph || !graph.nodes) return;
+
+  const nodes = Array.isArray(graph.nodes)
+    ? graph.nodes
+    : typeof graph.nodes === "object"
+      ? Object.values(graph.nodes)
+      : [];
+
+  for (const rawNode of nodes) {
+    if (!rawNode || typeof rawNode !== "object") continue;
+
+    const node = rawNode as BehaviorGraphNode;
+    const nodeType =
+      typeof node.type === "string" ? node.type : typeof node.typeName === "string" ? node.typeName : undefined;
+
+    if (!nodeType || !shouldDefaultNodeToNetworked(nodeType)) continue;
+
+    const configuration =
+      node.configuration && typeof node.configuration === "object" && !Array.isArray(node.configuration)
+        ? node.configuration
+        : (node.configuration = {});
+
+    if (!Object.prototype.hasOwnProperty.call(configuration, "networked")) {
+      configuration.networked = true;
+    }
+  }
+}
+
 // These components are all handled in some special way, not through inflators
 const ignoredComponents = [
   "visible",
@@ -169,6 +223,11 @@ export function inflateModel(world: HubsWorld, rootEid: number, { model }: Model
   // TODO: Probably the Hubs loop-animation component should be defined at scene
   //       or root level. Revisit the specification.
   // See https://github.com/Hubs-Foundation/hubs/pull/5938#discussion_r1163410185
+  // Behavior Graph nodes that mutate shared scene state should be networked by default.
+  // This keeps existing Blender graphs working in multiplayer even when "networked"
+  // wasn't explicitly toggled in each node.
+  applyBehaviorGraphNetworkingDefaults(model);
+
   if (model.animations !== undefined && model.animations.length > 0) {
     addComponent(world, MixerAnimatableInitialize, rootEid);
 

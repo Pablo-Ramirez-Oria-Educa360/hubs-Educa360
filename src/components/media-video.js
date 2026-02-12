@@ -98,6 +98,7 @@ AFRAME.registerComponent("media-video", {
     this.videoIsLive = null; // value null until we've determined if the video is live or not.
     this.onSnapImageLoaded = () => (this.isSnapping = false);
     this.hasAudioTracks = false;
+    this.isAudioOnly = false;
 
     this.el.setAttribute("hover-menu__video", { template: "#video-hover-menu", isFlat: true });
     this.el.components["hover-menu__video"].getHoverMenu().then(menu => {
@@ -389,14 +390,17 @@ AFRAME.registerComponent("media-video", {
       this.mesh.material.needsUpdate = true;
     }
 
-    let texture, audioSourceEl;
+    let texture,
+      audioSourceEl,
+      isAudioOnlyMedia = false;
     try {
       if (linkedVideoTexture) {
         texture = linkedVideoTexture;
         audioSourceEl = linkedAudioSource;
+        isAudioOnlyMedia = !texture?.isVideoTexture;
       } else {
         this.el.emit("video-loading");
-        ({ texture, audioSourceEl } = await this.createVideoTextureAudioSourceEl());
+        ({ texture, audioSourceEl, isAudioOnlyMedia } = await this.createVideoTextureAudioSourceEl());
         if (getCurrentMirroredMedia() === this.el) {
           await refreshMediaMirror();
         }
@@ -456,10 +460,12 @@ AFRAME.registerComponent("media-video", {
 
       this.videoTexture = texture;
       this.audioSource = audioSourceEl;
+      this.isAudioOnly = isAudioOnlyMedia || !texture?.isVideoTexture;
     } catch (e) {
       console.error("Error loading video", this.data.src, e);
       texture = errorTexture;
       this.videoTexture = this.audioSource = null;
+      this.isAudioOnly = false;
     }
 
     const projection = this.data.projection;
@@ -538,6 +544,7 @@ AFRAME.registerComponent("media-video", {
       const videoEl = createVideoOrAudioEl("video");
 
       let texture, audioEl, isReady;
+      let isAudioOnlyMedia = contentType.startsWith("audio/");
       if (contentType.startsWith("audio/")) {
         // We want to treat audio almost exactly like video, so we mock a video texture with an image property.
         texture = new THREE.Texture();
@@ -555,6 +562,7 @@ AFRAME.registerComponent("media-video", {
             texture = new THREE.Texture();
             texture.image = videoEl;
             texture.hls = hls;
+            isAudioOnlyMedia = true;
             return true;
           } else {
             const ready =
@@ -662,7 +670,7 @@ AFRAME.registerComponent("media-video", {
       const poll = () => {
         if (isReady()) {
           resolved = true;
-          resolve({ texture, audioSourceEl: audioEl || texture.image });
+          resolve({ texture, audioSourceEl: audioEl || texture.image, isAudioOnlyMedia });
         } else {
           pollTimeout = setTimeout(poll, 500);
         }
@@ -676,6 +684,7 @@ AFRAME.registerComponent("media-video", {
     if (!this.hoverMenu) return;
 
     const mediaLoader = this.el.components["media-loader"].data;
+    const isAudioOnly = this.isAudioOnly || this.data.contentType.startsWith("audio/");
     const pinnableElement = mediaLoader.linkedEl || this.el;
     const isPinned = pinnableElement.components.pinnable && pinnableElement.components.pinnable.data.pinned;
     this.playbackControls.object3D.visible = !this.data.hidePlaybackControls && !!this.video;
@@ -686,7 +695,7 @@ AFRAME.registerComponent("media-video", {
         this.hasAudioTracks && !this.data.hidePlaybackControls && !!this.video;
 
     this.snapButton.object3D.visible =
-      !!this.video && !this.data.contentType.startsWith("audio/") && window.APP.hubChannel.can("spawn_and_move_media");
+      !!this.video && !isAudioOnly && window.APP.hubChannel.can("spawn_and_move_media");
     this.seekForwardButton.object3D.visible = !!this.video && !this.videoIsLive;
 
     const mayModifyPlayHead =
@@ -697,7 +706,7 @@ AFRAME.registerComponent("media-video", {
       this.seekBackButton.object3D.visible =
         mayModifyPlayHead;
 
-    this.linkButton.object3D.visible = !!mediaLoader.mediaOptions.href && !this.data.contentType.startsWith("audio/");
+    this.linkButton.object3D.visible = !!mediaLoader.mediaOptions.href && !isAudioOnly;
 
     if (this.videoIsLive) {
       this.timeLabel.setAttribute("text", "value", "LIVE");
