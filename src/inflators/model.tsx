@@ -37,13 +37,19 @@ const networkedByDefaultNodeTypes = new Set([
   "media/mediaPlayback",
   "material/property/set",
   "material/set",
+  "hubs/material/set",
   "media_frame/setMediaFrameProperty",
   "text/setTextProperties",
-  "networkedVariable/set"
+  "networkedVariable/set",
+  "components/setComponentProperty"
 ]);
 
 function shouldDefaultNodeToNetworked(nodeType: string) {
-  return nodeType.startsWith("hubs/entity/set/") || networkedByDefaultNodeTypes.has(nodeType);
+  return (
+    nodeType.startsWith("hubs/entity/set/") ||
+    nodeType.startsWith("hubs/material/set") ||
+    networkedByDefaultNodeTypes.has(nodeType)
+  );
 }
 
 function applyBehaviorGraphNetworkingDefaults(model: Object3D) {
@@ -70,9 +76,9 @@ function applyBehaviorGraphNetworkingDefaults(model: Object3D) {
         ? node.configuration
         : (node.configuration = {});
 
-    if (!Object.prototype.hasOwnProperty.call(configuration, "networked")) {
-      configuration.networked = true;
-    }
+    // Many exported graphs serialize networked=false by default even for mutating nodes.
+    // Force true for these node types so interactions propagate in multiplayer.
+    configuration.networked = true;
   }
 }
 
