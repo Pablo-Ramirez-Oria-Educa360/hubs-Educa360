@@ -60,12 +60,12 @@ function* loadSrc(
   // Keep MediaInfo in sync when the source is changed at runtime (e.g. via behavior graphs),
   // otherwise remote clients can miss the new source because network sender still publishes stale URL data.
   if (hasComponent(world, MediaInfo, eid)) {
-    MediaInfo.accessibleUrl[eid] = APP.getSid(accessibleUrl);
-    MediaInfo.contentType[eid] = APP.getSid(contentType);
+    MediaInfo.accessibleUrl[eid] = APP.getSid(accessibleUrl)!;
+    MediaInfo.contentType[eid] = APP.getSid(contentType)!;
     MediaInfo.mediaType[eid] = mediaType || 0;
   }
   if (hasComponent(world, NetworkedVideo, eid)) {
-    NetworkedVideo.src[eid] = APP.getSid(accessibleUrl);
+    NetworkedVideo.src[eid] = APP.getSid(accessibleUrl)!;
   }
 
   let data: any;

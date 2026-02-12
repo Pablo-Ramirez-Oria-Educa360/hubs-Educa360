@@ -83,12 +83,14 @@ function ensureBehaviorGraphTargetNetworking(world: HubsWorld, targetEid: number
   }
 
   if (nodeType.startsWith("hubs/material/set") && gltfInflatorExists("networkedObjectMaterial")) {
-    gltfInflators.networkedObjectMaterial(world, targetEid, {});
+    const networkedObjectMaterialInflator = (gltfInflators as any).networkedObjectMaterial;
+    networkedObjectMaterialInflator?.(world, targetEid, {});
   }
 
   if (nodeType === "hubs/entity/set/visible" && gltfInflatorExists("visible")) {
     const visible = world.eid2obj.get(targetEid)?.visible;
-    gltfInflators.visible(world, targetEid, { visible: visible ?? true });
+    const visibleInflator = (gltfInflators as any).visible;
+    visibleInflator?.(world, targetEid, { visible: visible ?? true });
   }
 }
 
