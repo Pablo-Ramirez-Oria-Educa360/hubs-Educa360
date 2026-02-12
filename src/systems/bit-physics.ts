@@ -6,7 +6,7 @@ import { getBodyFromRigidBody, Type } from "../inflators/rigid-body";
 import { HubsWorld } from "../app";
 import { PhysicsSystem } from "./physics-system";
 import { getBox } from "../utils/auto-box-collider";
-import { Shape, Axis, Fit } from "../inflators/physics-shape";
+import { Shape, Axis } from "../inflators/physics-shape";
 import { Object3D, Vector3 } from "three";
 
 const rigidbodyQuery = defineQuery([Rigidbody, Object3DTag, Not(AEntity)]);
@@ -63,8 +63,8 @@ function getAutoDynamicShape(world: HubsWorld, bodyEid: number, shapeEid: number
 
     return {
       ...shape,
-      type: Object.values(Shape)[Shape.CAPSULE].toLowerCase(),
-      fit: Object.values(Fit)[Fit.MANUAL].toLowerCase(),
+      type: "capsule",
+      fit: "manual",
       cylinderAxis: axis === Axis.X ? "x" : axis === Axis.Z ? "z" : "y",
       halfExtents
     };
@@ -72,8 +72,8 @@ function getAutoDynamicShape(world: HubsWorld, bodyEid: number, shapeEid: number
 
   return {
     ...shape,
-    type: Object.values(Shape)[Shape.BOX].toLowerCase(),
-    fit: Object.values(Fit)[Fit.MANUAL].toLowerCase(),
+    type: "box",
+    fit: "manual",
     halfExtents: [x * 0.5, y * 0.5, z * 0.5]
   };
 }
@@ -83,7 +83,7 @@ function addPhysicsShapes(world: HubsWorld, physicsSystem: PhysicsSystem, eid: n
   const obj = world.eid2obj.get(eid)!;
   const bodyEid = findAncestorWithComponent(world, Rigidbody, eid);
   let shape = getShapeFromPhysicsShape(eid);
-  if (bodyEid !== undefined) {
+  if (bodyEid != null) {
     shape = getAutoDynamicShape(world, bodyEid, eid, obj, shape);
   }
   const shapeId = physicsSystem.addShapes(bodyId, obj, shape);
@@ -100,7 +100,7 @@ export const physicsCompatSystem = (world: HubsWorld, physicsSystem: PhysicsSyst
 
   shapeEnterQuery(world).forEach(eid => {
     const bodyEid = findAncestorWithComponent(world, Rigidbody, eid);
-    if (bodyEid) {
+    if (bodyEid != null) {
       PhysicsShape.bodyId[eid] = Rigidbody.bodyId[bodyEid];
       addPhysicsShapes(world, physicsSystem, eid);
     } else {
