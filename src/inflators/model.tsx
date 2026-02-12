@@ -77,6 +77,20 @@ function getNodeEntityTarget(node: BehaviorGraphNode) {
   return undefined;
 }
 
+function getNodeMaterialTarget(node: BehaviorGraphNode) {
+  const fromConfigMaterial = node.configuration?.material;
+  if (typeof fromConfigMaterial === "number" && Number.isFinite(fromConfigMaterial)) {
+    return fromConfigMaterial;
+  }
+
+  const fromParamsMaterial = (node.parameters as any)?.material?.value;
+  if (typeof fromParamsMaterial === "number" && Number.isFinite(fromParamsMaterial)) {
+    return fromParamsMaterial;
+  }
+
+  return undefined;
+}
+
 function ensureBehaviorGraphTargetNetworking(world: HubsWorld, targetEid: number, nodeType: string) {
   if (!hasComponent(world, Networked, targetEid)) {
     addComponent(world, Networked, targetEid);
@@ -91,6 +105,17 @@ function ensureBehaviorGraphTargetNetworking(world: HubsWorld, targetEid: number
     const visible = world.eid2obj.get(targetEid)?.visible;
     const visibleInflator = (gltfInflators as any).visible;
     visibleInflator?.(world, targetEid, { visible: visible ?? true });
+  }
+}
+
+function ensureBehaviorGraphMaterialNetworking(world: HubsWorld, materialEid: number) {
+  if (!hasComponent(world, Networked, materialEid)) {
+    addComponent(world, Networked, materialEid);
+  }
+
+  if (gltfInflatorExists("networkedMaterial")) {
+    const networkedMaterialInflator = (gltfInflators as any).networkedMaterial;
+    networkedMaterialInflator?.(world, materialEid, {});
   }
 }
 
@@ -125,6 +150,17 @@ function applyBehaviorGraphNetworkingDefaults(world: HubsWorld, model: Object3D)
     const targetEid = getNodeEntityTarget(node);
     if (targetEid !== undefined) {
       ensureBehaviorGraphTargetNetworking(world, targetEid, nodeType);
+    }
+
+    if (
+      nodeType.startsWith("hubs/material/set") ||
+      nodeType === "material/property/set" ||
+      nodeType === "material/set"
+    ) {
+      const materialEid = getNodeMaterialTarget(node);
+      if (materialEid !== undefined) {
+        ensureBehaviorGraphMaterialNetworking(world, materialEid);
+      }
     }
   }
 }
@@ -270,17 +306,6 @@ export function inflateModel(world: HubsWorld, rootEid: number, { model }: Model
     }
   });
 
-  // Hubs loop-animation component is defined at glTF node level.
-  // The component data are collected above in the scene graph traverse and
-  // bitECS LoopAnimation Component is set to root entity for simpler implementation.
-  // TODO: Probably the Hubs loop-animation component should be defined at scene
-  //       or root level. Revisit the specification.
-  // See https://github.com/Hubs-Foundation/hubs/pull/5938#discussion_r1163410185
-  // Behavior Graph nodes that mutate shared scene state should be networked by default.
-  // This keeps existing Blender graphs working in multiplayer even when "networked"
-  // wasn't explicitly toggled in each node.
-  applyBehaviorGraphNetworkingDefaults(world, model);
-
   if (model.animations !== undefined && model.animations.length > 0) {
     addComponent(world, MixerAnimatableInitialize, rootEid);
 
@@ -300,6 +325,16 @@ export function inflateModel(world: HubsWorld, rootEid: number, { model }: Model
   }
 
   gltfLinkResolvers.forEach(resolver => resolver(world, model, rootEid, idx2eid));
+
+  // Hubs loop-animation component is defined at glTF node level.
+  // The component data are collected above in the scene graph traverse and
+  // bitECS LoopAnimation Component is set to root entity for simpler implementation.
+  // TODO: Probably the Hubs loop-animation component should be defined at scene
+  //       or root level. Revisit the specification.
+  // See https://github.com/Hubs-Foundation/hubs/pull/5938#discussion_r1163410185
+  // Behavior Graph nodes that mutate shared scene state should be networked by default.
+  // Run this after link resolvers so entity/material references are already resolved to eids.
+  applyBehaviorGraphNetworkingDefaults(world, model);
 
   addComponent(world, GLTFModel, rootEid);
 }
