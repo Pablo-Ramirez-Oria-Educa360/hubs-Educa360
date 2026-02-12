@@ -1,7 +1,7 @@
 import { addComponent, addEntity, hasComponent } from "bitecs";
 import { Material, Mesh, Object3D } from "three";
 import { HubsWorld } from "../app";
-import { GLTFModel, MaterialTag, MixerAnimatableInitialize } from "../bit-components";
+import { GLTFModel, MaterialTag, MixerAnimatableInitialize, Networked } from "../bit-components";
 import { addMaterialComponent, addObject3DComponent, gltfInflatorExists, gltfInflators } from "../utils/jsx-entity";
 import { mapMaterials } from "../utils/material-utils";
 import { EntityID } from "../utils/networking-types";
@@ -26,6 +26,7 @@ type BehaviorGraphNode = {
   type?: unknown;
   typeName?: unknown;
   configuration?: Record<string, unknown>;
+  parameters?: Record<string, unknown>;
 };
 
 const networkedByDefaultNodeTypes = new Set([
@@ -52,7 +53,46 @@ function shouldDefaultNodeToNetworked(nodeType: string) {
   );
 }
 
-function applyBehaviorGraphNetworkingDefaults(model: Object3D) {
+function getNodeEntityTarget(node: BehaviorGraphNode) {
+  const fromConfigEntity = node.configuration?.entity;
+  if (typeof fromConfigEntity === "number" && Number.isFinite(fromConfigEntity)) {
+    return fromConfigEntity;
+  }
+
+  const fromConfigTarget = node.configuration?.target;
+  if (typeof fromConfigTarget === "number" && Number.isFinite(fromConfigTarget)) {
+    return fromConfigTarget;
+  }
+
+  const fromParamsEntity = (node.parameters as any)?.entity?.value;
+  if (typeof fromParamsEntity === "number" && Number.isFinite(fromParamsEntity)) {
+    return fromParamsEntity;
+  }
+
+  const fromParamsTarget = (node.parameters as any)?.target?.value;
+  if (typeof fromParamsTarget === "number" && Number.isFinite(fromParamsTarget)) {
+    return fromParamsTarget;
+  }
+
+  return undefined;
+}
+
+function ensureBehaviorGraphTargetNetworking(world: HubsWorld, targetEid: number, nodeType: string) {
+  if (!hasComponent(world, Networked, targetEid)) {
+    addComponent(world, Networked, targetEid);
+  }
+
+  if (nodeType.startsWith("hubs/material/set") && gltfInflatorExists("networkedObjectMaterial")) {
+    gltfInflators.networkedObjectMaterial(world, targetEid, {});
+  }
+
+  if (nodeType === "hubs/entity/set/visible" && gltfInflatorExists("visible")) {
+    const visible = world.eid2obj.get(targetEid)?.visible;
+    gltfInflators.visible(world, targetEid, { visible: visible ?? true });
+  }
+}
+
+function applyBehaviorGraphNetworkingDefaults(world: HubsWorld, model: Object3D) {
   const graph = model.userData?.behaviorGraph as { nodes?: unknown[] | Record<string, unknown> } | undefined;
   if (!graph || !graph.nodes) return;
 
@@ -79,6 +119,11 @@ function applyBehaviorGraphNetworkingDefaults(model: Object3D) {
     // Many exported graphs serialize networked=false by default even for mutating nodes.
     // Force true for these node types so interactions propagate in multiplayer.
     configuration.networked = true;
+
+    const targetEid = getNodeEntityTarget(node);
+    if (targetEid !== undefined) {
+      ensureBehaviorGraphTargetNetworking(world, targetEid, nodeType);
+    }
   }
 }
 
@@ -232,7 +277,7 @@ export function inflateModel(world: HubsWorld, rootEid: number, { model }: Model
   // Behavior Graph nodes that mutate shared scene state should be networked by default.
   // This keeps existing Blender graphs working in multiplayer even when "networked"
   // wasn't explicitly toggled in each node.
-  applyBehaviorGraphNetworkingDefaults(model);
+  applyBehaviorGraphNetworkingDefaults(world, model);
 
   if (model.animations !== undefined && model.animations.length > 0) {
     addComponent(world, MixerAnimatableInitialize, rootEid);

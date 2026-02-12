@@ -56,6 +56,18 @@ function* loadSrc(
   const autoPlay = NetworkedVideo.flags[eid] & VIDEO_FLAGS.AUTO_PLAY ? true : false;
   const loop = NetworkedVideo.flags[eid] & VIDEO_FLAGS.LOOP ? true : false;
   const { accessibleUrl, contentType, mediaType } = (yield resolveMediaInfo(src)) as MediaInfoT;
+
+  // Keep MediaInfo in sync when the source is changed at runtime (e.g. via behavior graphs),
+  // otherwise remote clients can miss the new source because network sender still publishes stale URL data.
+  if (hasComponent(world, MediaInfo, eid)) {
+    MediaInfo.accessibleUrl[eid] = APP.getSid(accessibleUrl);
+    MediaInfo.contentType[eid] = APP.getSid(contentType);
+    MediaInfo.mediaType[eid] = mediaType || 0;
+  }
+  if (hasComponent(world, NetworkedVideo, eid)) {
+    NetworkedVideo.src[eid] = APP.getSid(accessibleUrl);
+  }
+
   let data: any;
   if (mediaType === MediaType.VIDEO) {
     data = (yield loadVideoTexture(accessibleUrl, contentType, loop, autoPlay)) as unknown;
