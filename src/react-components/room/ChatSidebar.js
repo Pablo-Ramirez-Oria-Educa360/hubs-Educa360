@@ -329,6 +329,8 @@ export function formatSystemMessage(entry, intl) {
       );
     case "log":
       return intl.formatMessage(logMessages[entry.messageType], entry.props);
+    case "script_message":
+      return entry.msg;
     default:
       return null;
   }

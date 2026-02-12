@@ -14,7 +14,8 @@ import {
   AEntity,
   Networked,
   MediaLoader,
-  Deletable
+  Deletable,
+  Rigidbody
 } from "../bit-components";
 import { canMove } from "../utils/permissions-utils";
 import { canMove as canMoveEntity } from "../utils/bit-permissions-utils";
@@ -77,10 +78,17 @@ export function isAEntityPinned(world, eid) {
 // descendant entity under pinned entity wants to be grabbable.
 function grab(world, userinput, queryHovered, held, grabPath) {
   const hovered = queryHovered(world)[0];
+  if (hovered === undefined) return;
+
+  // Scene interactables can have hover targets on descendants, but the
+  // networked/physics state lives on the root holdable rigid body.
+  const interactableRoot = findAncestorWithComponents(world, [Holdable, Rigidbody], hovered);
 
   // Special path for Dropped/Pasted Media with new loader enabled. Check the comment above.
-  const mediaRoot = findAncestorWithComponents(world, [Deletable, MediaLoader, Holdable], hovered);
-  const target = mediaRoot ? mediaRoot : hovered;
+  const mediaRoot = interactableRoot
+    ? undefined
+    : findAncestorWithComponents(world, [Deletable, MediaLoader, Holdable], hovered);
+  const target = interactableRoot || mediaRoot || hovered;
   const isEntityPinned = isPinned(target) || isAEntityPinned(world, target);
 
   if (

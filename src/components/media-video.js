@@ -697,7 +697,7 @@ AFRAME.registerComponent("media-video", {
       this.seekBackButton.object3D.visible =
         mayModifyPlayHead;
 
-    this.linkButton.object3D.visible = !!mediaLoader.mediaOptions.href;
+    this.linkButton.object3D.visible = !!mediaLoader.mediaOptions.href && !this.data.contentType.startsWith("audio/");
 
     if (this.videoIsLive) {
       this.timeLabel.setAttribute("text", "value", "LIVE");

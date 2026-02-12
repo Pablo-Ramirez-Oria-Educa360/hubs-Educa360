@@ -28,7 +28,6 @@ const ignoredComponents = [
   "frustum",
   "frustrum",
   "shadow",
-  "networked",
   "animation-mixer",
   "loop-animation"
 ];

@@ -392,6 +392,8 @@ export interface GLTFComponentData extends ComponentData {
   image?: ImageLoaderParams;
   link?: LinkLoaderParams;
   model?: ModelLoaderParams;
+  networked?: any;
+  networkedTransform?: any;
   environmentSettings?: EnvironmentSettingsParams;
   reflectionProbe?: ReflectionProbeParams;
   navMesh?: true;
@@ -541,6 +543,8 @@ export const gltfInflators: Required<{ [K in keyof GLTFComponentData]: InflatorF
   heightfield: inflateHeightField,
   audioSettings: inflateAudioSettings,
   mediaLink: inflateMediaLink,
+  networkedTransform: createDefaultInflator(NetworkedTransform),
+  networked: createDefaultInflator(Networked),
   rigidbody: inflateGLTFRigidBody,
   physicsShape: inflateAmmoShape,
   text: inflateGLTFText
