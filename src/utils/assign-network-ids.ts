@@ -44,7 +44,8 @@ function assignNetworkedRenderAssetData(world: HubsWorld, rootEid: EntityID, cre
       const materialNid = APP.getString(Networked.id[matEid])!;
       Object.values(mat).forEach(value => {
         if (!(value instanceof Texture)) return;
-        const texEid = value.eid as EntityID | undefined;
+        const textureValue = value as Texture & { eid?: EntityID };
+        const texEid = textureValue.eid;
         if (!texEid || !hasComponent(world, Networked, texEid) || seenTextures.has(texEid)) return;
 
         seenTextures.add(texEid);
