@@ -29,19 +29,19 @@ type BehaviorGraphNode = {
   parameters?: Record<string, unknown>;
 };
 
+// Avoid forcing networked=true for animation action nodes.
+// Their "action" values are transient runtime eids and can be undefined in
+// replay/remote execution paths, which causes crashes in setTimescale/play.
+// Also avoid forcing networkedVariable/set: in networked mode it writes to
+// NetworkedBehaviorData instead of graph variableId storage, which can leave
+// downstream Variable Get(action) null in legacy graphs.
 const networkedByDefaultNodeTypes = new Set([
-  "animation/createAnimationAction",
-  "animation/play",
-  "animation/stop",
-  "animation/crossfadeTo",
-  "three/animation/setTimescale",
   "media/mediaPlayback",
   "material/property/set",
   "material/set",
   "hubs/material/set",
   "media_frame/setMediaFrameProperty",
   "text/setTextProperties",
-  "networkedVariable/set",
   "components/setComponentProperty"
 ]);
 
