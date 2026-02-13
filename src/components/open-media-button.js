@@ -8,6 +8,10 @@ function t(id, fallback) {
   return getMessage(id) || fallback;
 }
 
+function isAudioContentType(contentType = "") {
+  return typeof contentType === "string" && contentType.startsWith("audio/");
+}
+
 AFRAME.registerComponent("open-media-button", {
   schema: {
     onlyOpenLink: { type: "boolean" }
@@ -18,8 +22,21 @@ AFRAME.registerComponent("open-media-button", {
     this.updateSrc = async () => {
       if (!this.targetEl || !this.targetEl.parentNode) return; // If removed/not ready
       const mediaLoader = this.targetEl.components["media-loader"].data;
+      const mediaVideo = this.targetEl.components["media-video"];
+      const mediaVideoEl = mediaVideo?.video;
       const src = (this.src = (mediaLoader.mediaOptions && mediaLoader.mediaOptions.href) || mediaLoader.src);
-      const visible = src && guessContentType(src) !== "video/vnd.hubs-webrtc";
+      const isVideoLinkButton = this.el.classList.contains("video-link-button");
+      const detectedContentType =
+        mediaLoader.contentType || mediaVideo?.data?.contentType || guessContentType(mediaLoader.src || src) || "";
+      const isAudioOnlyMedia =
+        !!mediaVideo?.isAudioOnly ||
+        isAudioContentType(detectedContentType) ||
+        (!!mediaVideoEl &&
+          mediaVideoEl.videoWidth === 0 &&
+          mediaVideoEl.videoHeight === 0 &&
+          !!mediaVideo?.hasAudioTracks);
+      const visible =
+        !!src && guessContentType(src) !== "video/vnd.hubs-webrtc" && !(isVideoLinkButton && isAudioOnlyMedia);
       const mayChangeScene = this.el.sceneEl.systems.permissions.canOrWillIfCreator("update_hub");
 
       this.el.object3D.visible = !!visible;

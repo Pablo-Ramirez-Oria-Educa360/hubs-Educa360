@@ -117,6 +117,7 @@ AFRAME.registerComponent("media-video", {
       this.timeLabel = this.el.querySelector(".video-time-label");
       this.volumeLabel = this.el.querySelector(".video-volume-label");
       this.linkButton = this.el.querySelector(".video-link-button");
+      this.linkButtonHasOpenMediaButton = this.linkButton.hasAttribute("open-media-button");
 
       this.playPauseButton.object3D.addEventListener("interact", this.togglePlaying);
       this.seekForwardButton.object3D.addEventListener("interact", this.seekForward);
@@ -684,19 +685,22 @@ AFRAME.registerComponent("media-video", {
     if (!this.hoverMenu) return;
 
     const mediaLoader = this.el.components["media-loader"].data;
-    const isAudioOnly = this.isAudioOnly || this.data.contentType.startsWith("audio/");
+    const isAudioOnly =
+      this.isAudioOnly ||
+      this.data.contentType.startsWith("audio/") ||
+      (!!this.video && this.video.videoWidth === 0 && this.video.videoHeight === 0 && this.hasAudioTracks);
     const pinnableElement = mediaLoader.linkedEl || this.el;
     const isPinned = pinnableElement.components.pinnable && pinnableElement.components.pinnable.data.pinned;
     this.playbackControls.object3D.visible = !this.data.hidePlaybackControls && !!this.video;
-    this.timeLabel.object3D.visible = !this.data.hidePlaybackControls;
+    this.timeLabel.object3D.visible = !isAudioOnly && !this.data.hidePlaybackControls;
     this.volumeLabel.object3D.visible =
       this.volumeUpButton.object3D.visible =
       this.volumeDownButton.object3D.visible =
-        this.hasAudioTracks && !this.data.hidePlaybackControls && !!this.video;
+        !isAudioOnly && this.hasAudioTracks && !this.data.hidePlaybackControls && !!this.video;
 
     this.snapButton.object3D.visible =
       !!this.video && !isAudioOnly && window.APP.hubChannel.can("spawn_and_move_media");
-    this.seekForwardButton.object3D.visible = !!this.video && !this.videoIsLive;
+    this.seekForwardButton.object3D.visible = !isAudioOnly && !!this.video && !this.videoIsLive;
 
     const mayModifyPlayHead =
       !!this.video && !this.videoIsLive && (!isPinned || window.APP.hubChannel.can("pin_objects"));
@@ -704,9 +708,26 @@ AFRAME.registerComponent("media-video", {
     this.playPauseButton.object3D.visible =
       this.seekForwardButton.object3D.visible =
       this.seekBackButton.object3D.visible =
-        mayModifyPlayHead;
+        !isAudioOnly && mayModifyPlayHead;
+
+    if (isAudioOnly) {
+      this.playPauseButton.object3D.visible = mayModifyPlayHead;
+    }
 
     this.linkButton.object3D.visible = !!mediaLoader.mediaOptions.href && !isAudioOnly;
+    if (isAudioOnly) {
+      this.linkButton.classList.remove("ui");
+      this.linkButton.removeAttribute("is-remote-hover-target");
+      if (this.linkButton.hasAttribute("open-media-button")) {
+        this.linkButton.removeAttribute("open-media-button");
+      }
+    } else {
+      this.linkButton.classList.add("ui");
+      this.linkButton.setAttribute("is-remote-hover-target", "");
+      if (this.linkButtonHasOpenMediaButton && !this.linkButton.hasAttribute("open-media-button")) {
+        this.linkButton.setAttribute("open-media-button", "");
+      }
+    }
 
     if (this.videoIsLive) {
       this.timeLabel.setAttribute("text", "value", "LIVE");
