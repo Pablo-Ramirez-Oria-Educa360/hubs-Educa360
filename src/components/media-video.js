@@ -118,6 +118,7 @@ AFRAME.registerComponent("media-video", {
       this.volumeLabel = this.el.querySelector(".video-volume-label");
       this.linkButton = this.el.querySelector(".video-link-button");
       this.linkButtonHasOpenMediaButton = this.linkButton.hasAttribute("open-media-button");
+      this.playPauseButtonBaseZ = this.playPauseButton.object3D.position.z;
 
       this.playPauseButton.object3D.addEventListener("interact", this.togglePlaying);
       this.seekForwardButton.object3D.addEventListener("interact", this.seekForward);
@@ -712,6 +713,9 @@ AFRAME.registerComponent("media-video", {
 
     if (isAudioOnly) {
       this.playPauseButton.object3D.visible = mayModifyPlayHead;
+      this.playPauseButton.object3D.position.z = this.playPauseButtonBaseZ + 0.02;
+    } else {
+      this.playPauseButton.object3D.position.z = this.playPauseButtonBaseZ;
     }
 
     this.linkButton.object3D.visible = !!mediaLoader.mediaOptions.href && !isAudioOnly;
