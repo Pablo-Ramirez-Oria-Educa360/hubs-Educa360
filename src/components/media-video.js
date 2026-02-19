@@ -54,6 +54,19 @@ export function timeFmt(t) {
 
 const MAX_GAIN_MULTIPLIER = 2;
 const AUDIO_ONLY_PLAY_BUTTON_Z_OFFSET = 0.02;
+const AUDIO_ONLY_RAYCAST_ORIGINAL = "__audioOnlyOriginalRaycast";
+const AUDIO_ONLY_PLAY_HIT_TOLERANCE = 0.5;
+const _audioOnlyLocalPoint = new THREE.Vector3();
+
+function isInsidePlayButtonHitArea(playButtonObject3D, worldPoint) {
+  playButtonObject3D.updateWorldMatrix(true, false);
+  _audioOnlyLocalPoint.copy(worldPoint);
+  playButtonObject3D.worldToLocal(_audioOnlyLocalPoint);
+  return (
+    Math.abs(_audioOnlyLocalPoint.x) <= AUDIO_ONLY_PLAY_HIT_TOLERANCE &&
+    Math.abs(_audioOnlyLocalPoint.y) <= AUDIO_ONLY_PLAY_HIT_TOLERANCE
+  );
+}
 
 AFRAME.registerComponent("media-video", {
   schema: {
@@ -100,6 +113,7 @@ AFRAME.registerComponent("media-video", {
     this.onSnapImageLoaded = () => (this.isSnapping = false);
     this.hasAudioTracks = false;
     this.isAudioOnly = false;
+    this.audioOnlyPatchedMesh = null;
 
     this.el.setAttribute("hover-menu__video", { template: "#video-hover-menu", isFlat: true });
     this.el.components["hover-menu__video"].getHoverMenu().then(menu => {
@@ -188,6 +202,58 @@ AFRAME.registerComponent("media-video", {
 
     APP.store.addEventListener("statechanged", this.onPreferenceChanged);
     this.el.addEventListener("audio_type_changed", this.setupAudio);
+  },
+
+  restoreAudioOnlyMeshRaycast() {
+    if (!this.audioOnlyPatchedMesh) return;
+    if (this.audioOnlyPatchedMesh[AUDIO_ONLY_RAYCAST_ORIGINAL]) {
+      this.audioOnlyPatchedMesh.raycast = this.audioOnlyPatchedMesh[AUDIO_ONLY_RAYCAST_ORIGINAL];
+      delete this.audioOnlyPatchedMesh[AUDIO_ONLY_RAYCAST_ORIGINAL];
+    }
+    this.audioOnlyPatchedMesh = null;
+  },
+
+  patchAudioOnlyMeshRaycast(mesh) {
+    if (!mesh || mesh[AUDIO_ONLY_RAYCAST_ORIGINAL]) return;
+
+    const originalRaycast = mesh.raycast;
+    mesh[AUDIO_ONLY_RAYCAST_ORIGINAL] = originalRaycast;
+    mesh.raycast = (raycaster, intersects) => {
+      const localIntersections = [];
+      originalRaycast.call(mesh, raycaster, localIntersections);
+      if (!localIntersections.length) return;
+
+      const playButtonObject3D = this.playPauseButton && this.playPauseButton.object3D;
+      if (!playButtonObject3D) {
+        intersects.push(...localIntersections);
+        return;
+      }
+
+      for (let i = 0; i < localIntersections.length; i++) {
+        const intersection = localIntersections[i];
+        if (isInsidePlayButtonHitArea(playButtonObject3D, intersection.point)) {
+          intersects.push(intersection);
+          return;
+        }
+      }
+    };
+
+    this.audioOnlyPatchedMesh = mesh;
+  },
+
+  setAudioOnlyMeshRaycastEnabled(enabled) {
+    const mesh = this.el.getObject3D("mesh");
+    if (!enabled || !mesh || !this.playPauseButton) {
+      this.restoreAudioOnlyMeshRaycast();
+      return;
+    }
+
+    if (this.audioOnlyPatchedMesh === mesh && mesh[AUDIO_ONLY_RAYCAST_ORIGINAL]) {
+      return;
+    }
+
+    this.restoreAudioOnlyMeshRaycast();
+    this.patchAudioOnlyMeshRaycast(mesh);
   },
 
   play() {
@@ -724,6 +790,9 @@ AFRAME.registerComponent("media-video", {
       this.playPauseButton.object3D.scale.copy(this.playPauseButtonBaseScale);
     }
 
+    const isBitecsBasedClient = !!APP.hub?.user_data?.hubs_use_bitecs_based_client;
+    this.setAudioOnlyMeshRaycastEnabled(isAudioOnly && mayModifyAudioPlayHead && !isBitecsBasedClient);
+
     this.linkButton.object3D.visible = !!mediaLoader.mediaOptions.href && !isAudioOnly;
     if (isAudioOnly) {
       this.linkButton.classList.remove("ui");
@@ -808,6 +877,7 @@ AFRAME.registerComponent("media-video", {
 
   remove() {
     this.cleanUp();
+    this.restoreAudioOnlyMeshRaycast();
 
     APP.isAudioPaused.delete(this.el);
 
