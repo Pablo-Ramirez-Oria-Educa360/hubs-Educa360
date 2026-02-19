@@ -53,6 +53,10 @@ export function timeFmt(t) {
 }
 
 const MAX_GAIN_MULTIPLIER = 2;
+const AUDIO_ONLY_PLAY_BUTTON_SCALE_X_MULTIPLIER = 5;
+const AUDIO_ONLY_PLAY_BUTTON_SCALE_Y_MULTIPLIER = 4.6;
+const AUDIO_ONLY_PLAY_BUTTON_Y_OFFSET = 0.095;
+const AUDIO_ONLY_PLAY_BUTTON_Z_OFFSET = 0.02;
 
 AFRAME.registerComponent("media-video", {
   schema: {
@@ -118,7 +122,8 @@ AFRAME.registerComponent("media-video", {
       this.volumeLabel = this.el.querySelector(".video-volume-label");
       this.linkButton = this.el.querySelector(".video-link-button");
       this.linkButtonHasOpenMediaButton = this.linkButton.hasAttribute("open-media-button");
-      this.playPauseButtonBaseZ = this.playPauseButton.object3D.position.z;
+      this.playPauseButtonBasePosition = this.playPauseButton.object3D.position.clone();
+      this.playPauseButtonBaseScale = this.playPauseButton.object3D.scale.clone();
 
       this.playPauseButton.object3D.addEventListener("interact", this.togglePlaying);
       this.seekForwardButton.object3D.addEventListener("interact", this.seekForward);
@@ -713,9 +718,19 @@ AFRAME.registerComponent("media-video", {
 
     if (isAudioOnly) {
       this.playPauseButton.object3D.visible = mayModifyPlayHead;
-      this.playPauseButton.object3D.position.z = this.playPauseButtonBaseZ + 0.02;
+      this.playPauseButton.object3D.position.set(
+        this.playPauseButtonBasePosition.x,
+        this.playPauseButtonBasePosition.y + AUDIO_ONLY_PLAY_BUTTON_Y_OFFSET,
+        this.playPauseButtonBasePosition.z + AUDIO_ONLY_PLAY_BUTTON_Z_OFFSET
+      );
+      this.playPauseButton.object3D.scale.set(
+        this.playPauseButtonBaseScale.x * AUDIO_ONLY_PLAY_BUTTON_SCALE_X_MULTIPLIER,
+        this.playPauseButtonBaseScale.y * AUDIO_ONLY_PLAY_BUTTON_SCALE_Y_MULTIPLIER,
+        this.playPauseButtonBaseScale.z
+      );
     } else {
-      this.playPauseButton.object3D.position.z = this.playPauseButtonBaseZ;
+      this.playPauseButton.object3D.position.copy(this.playPauseButtonBasePosition);
+      this.playPauseButton.object3D.scale.copy(this.playPauseButtonBaseScale);
     }
 
     this.linkButton.object3D.visible = !!mediaLoader.mediaOptions.href && !isAudioOnly;
