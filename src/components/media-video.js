@@ -53,10 +53,44 @@ export function timeFmt(t) {
 }
 
 const MAX_GAIN_MULTIPLIER = 2;
-const AUDIO_ONLY_PLAY_BUTTON_SCALE_X_MULTIPLIER = 5;
-const AUDIO_ONLY_PLAY_BUTTON_SCALE_Y_MULTIPLIER = 4.6;
-const AUDIO_ONLY_PLAY_BUTTON_Y_OFFSET = 0.095;
 const AUDIO_ONLY_PLAY_BUTTON_Z_OFFSET = 0.02;
+const AUDIO_ONLY_PLAY_BUTTON_SCALE_PADDING = 0.96;
+
+const _worldBounds = new THREE.Box3();
+const _localBounds = new THREE.Box3();
+const _localBounds2 = new THREE.Box3();
+const _tmpCorners = Array.from({ length: 8 }, () => new THREE.Vector3());
+
+function copyWorldBoxToLocalBox(worldBox, localObject, outBox) {
+  const min = worldBox.min;
+  const max = worldBox.max;
+
+  _tmpCorners[0].set(min.x, min.y, min.z);
+  _tmpCorners[1].set(max.x, min.y, min.z);
+  _tmpCorners[2].set(min.x, max.y, min.z);
+  _tmpCorners[3].set(max.x, max.y, min.z);
+  _tmpCorners[4].set(min.x, min.y, max.z);
+  _tmpCorners[5].set(max.x, min.y, max.z);
+  _tmpCorners[6].set(min.x, max.y, max.z);
+  _tmpCorners[7].set(max.x, max.y, max.z);
+
+  outBox.makeEmpty();
+  for (let i = 0; i < _tmpCorners.length; i++) {
+    localObject.worldToLocal(_tmpCorners[i]);
+    outBox.expandByPoint(_tmpCorners[i]);
+  }
+  return outBox;
+}
+
+function getObjectBoundsInLocalSpace(object3D, localObject, outBox) {
+  object3D.updateWorldMatrix(true, true);
+  _worldBounds.setFromObject(object3D);
+  if (_worldBounds.isEmpty()) {
+    outBox.makeEmpty();
+    return outBox;
+  }
+  return copyWorldBoxToLocalBox(_worldBounds, localObject, outBox);
+}
 
 AFRAME.registerComponent("media-video", {
   schema: {
@@ -718,16 +752,41 @@ AFRAME.registerComponent("media-video", {
 
     if (isAudioOnly) {
       this.playPauseButton.object3D.visible = mayModifyPlayHead;
-      this.playPauseButton.object3D.position.set(
-        this.playPauseButtonBasePosition.x,
-        this.playPauseButtonBasePosition.y + AUDIO_ONLY_PLAY_BUTTON_Y_OFFSET,
-        this.playPauseButtonBasePosition.z + AUDIO_ONLY_PLAY_BUTTON_Z_OFFSET
-      );
-      this.playPauseButton.object3D.scale.set(
-        this.playPauseButtonBaseScale.x * AUDIO_ONLY_PLAY_BUTTON_SCALE_X_MULTIPLIER,
-        this.playPauseButtonBaseScale.y * AUDIO_ONLY_PLAY_BUTTON_SCALE_Y_MULTIPLIER,
-        this.playPauseButtonBaseScale.z
-      );
+      this.playPauseButton.object3D.position.copy(this.playPauseButtonBasePosition);
+      this.playPauseButton.object3D.scale.copy(this.playPauseButtonBaseScale);
+
+      const buttonObj = this.playPauseButton.object3D;
+      const buttonParent = buttonObj.parent;
+      const mediaMesh = this.el.getObject3D("mesh");
+      if (mediaMesh && buttonParent) {
+        const mediaBounds = getObjectBoundsInLocalSpace(mediaMesh, buttonParent, _localBounds);
+        const baseButtonBounds = getObjectBoundsInLocalSpace(buttonObj, buttonParent, _localBounds2);
+
+        if (!mediaBounds.isEmpty() && !baseButtonBounds.isEmpty()) {
+          const mediaWidth = mediaBounds.max.x - mediaBounds.min.x;
+          const mediaHeight = mediaBounds.max.y - mediaBounds.min.y;
+          const baseWidth = baseButtonBounds.max.x - baseButtonBounds.min.x;
+          const baseHeight = baseButtonBounds.max.y - baseButtonBounds.min.y;
+
+          if (mediaWidth > 0 && mediaHeight > 0 && baseWidth > 0 && baseHeight > 0) {
+            const centerX = (mediaBounds.min.x + mediaBounds.max.x) * 0.5;
+            const centerY = (mediaBounds.min.y + mediaBounds.max.y) * 0.5;
+            const scaleX = (mediaWidth / baseWidth) * AUDIO_ONLY_PLAY_BUTTON_SCALE_PADDING;
+            const scaleY = (mediaHeight / baseHeight) * AUDIO_ONLY_PLAY_BUTTON_SCALE_PADDING;
+
+            buttonObj.position.set(
+              centerX,
+              centerY,
+              this.playPauseButtonBasePosition.z + AUDIO_ONLY_PLAY_BUTTON_Z_OFFSET
+            );
+            buttonObj.scale.set(
+              this.playPauseButtonBaseScale.x * scaleX,
+              this.playPauseButtonBaseScale.y * scaleY,
+              this.playPauseButtonBaseScale.z
+            );
+          }
+        }
+      }
     } else {
       this.playPauseButton.object3D.position.copy(this.playPauseButtonBasePosition);
       this.playPauseButton.object3D.scale.copy(this.playPauseButtonBaseScale);
