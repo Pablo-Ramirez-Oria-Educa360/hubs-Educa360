@@ -88,4 +88,5 @@ export function inflateChromaKeyVideo(world: HubsWorld, eid: number, params: Chr
   ChromaKeyVideo.invert[eid] = p.invert ? 1 : 0;
   ChromaKeyVideo.alphaMode[eid] = normalizeAlphaMode(p.alphaMode);
   ChromaKeyVideo.alphaCutoff[eid] = p.alphaCutoff;
+  return eid;
 }
