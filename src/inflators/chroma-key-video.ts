@@ -30,15 +30,15 @@ const DEFAULTS: Required<{
   alphaMode: ChromaKeyAlphaMode;
   alphaCutoff: number;
 }> = {
-  mode: ChromaKeyMode.CHROMA,
+  mode: ChromaKeyMode.LUMA,
   keyColor: [0, 0, 0],
-  threshold: 0.2,
-  softness: 0.1,
-  despill: 0.15,
+  threshold: 0.02,
+  softness: 0.0,
+  despill: 0.0,
   opacity: 1.0,
   invert: false,
   alphaMode: ChromaKeyAlphaMode.ALPHA_TEST,
-  alphaCutoff: 0.05
+  alphaCutoff: 0.5
 };
 
 function normalizeMode(mode: ChromaKeyVideoParams["mode"]): ChromaKeyMode {

@@ -62,16 +62,16 @@ const explicitQuery = defineQuery([ChromaKeyVideo]);
 const mediaVideoQuery = defineQuery([MediaVideo]);
 
 const AUTO_CHROMA_SETTINGS: RuntimeSettings = {
-  mode: ChromaKeyMode.CHROMA,
+  mode: ChromaKeyMode.LUMA,
   keyColor: [0, 0, 0],
-  // Conservative defaults: only key near-pure black by default.
-  threshold: 0.003,
-  softness: 0.002,
+  // Strict luma-key defaults: remove near-pure black with hard edges.
+  threshold: 0.02,
+  softness: 0.0,
   despill: 0.0,
   opacity: 1.0,
   invert: 0,
   alphaMode: ChromaKeyAlphaMode.ALPHA_TEST,
-  alphaCutoff: 0.04
+  alphaCutoff: 0.5
 };
 
 function resolveMaterialForEntity(world: HubsWorld, eid: number): MaterialWithCustomProgramCacheKey | undefined {
@@ -156,13 +156,13 @@ function ensurePatchedShader(shader: ShaderLike) {
 
   shader.uniforms[CK_UNIFORMS.mode] = { value: ChromaKeyMode.CHROMA };
   shader.uniforms[CK_UNIFORMS.keyColor] = { value: { x: 0, y: 0, z: 0 } };
-  shader.uniforms[CK_UNIFORMS.threshold] = { value: 0.2 };
-  shader.uniforms[CK_UNIFORMS.softness] = { value: 0.1 };
-  shader.uniforms[CK_UNIFORMS.despill] = { value: 0.15 };
+  shader.uniforms[CK_UNIFORMS.threshold] = { value: 0.02 };
+  shader.uniforms[CK_UNIFORMS.softness] = { value: 0.0 };
+  shader.uniforms[CK_UNIFORMS.despill] = { value: 0.0 };
   shader.uniforms[CK_UNIFORMS.opacity] = { value: 1.0 };
   shader.uniforms[CK_UNIFORMS.invert] = { value: 0 };
   shader.uniforms[CK_UNIFORMS.alphaMode] = { value: ChromaKeyAlphaMode.ALPHA_TEST };
-  shader.uniforms[CK_UNIFORMS.alphaCutoff] = { value: 0.05 };
+  shader.uniforms[CK_UNIFORMS.alphaCutoff] = { value: 0.5 };
 
   shader.fragmentShader = shader.fragmentShader.replace(
     "#include <common>",
@@ -182,16 +182,25 @@ float ck_luma(vec3 c) {
 }
 
 float ck_compute_alpha(vec3 rgb) {
+  float soft = max(${CK_UNIFORMS.softness}, 0.0);
   float a;
   if (${CK_UNIFORMS.mode} == ${ChromaKeyMode.LUMA}) {
     float lum = ck_luma(rgb);
-    a = smoothstep(${CK_UNIFORMS.threshold}, ${CK_UNIFORMS.threshold} + ${CK_UNIFORMS.softness}, lum);
+    if (soft <= 0.000001) {
+      a = step(${CK_UNIFORMS.threshold}, lum);
+    } else {
+      a = smoothstep(${CK_UNIFORMS.threshold}, ${CK_UNIFORMS.threshold} + soft, lum);
+    }
     if (${CK_UNIFORMS.invert} == 1) {
       a = 1.0 - a;
     }
   } else {
     float d = distance(rgb, ${CK_UNIFORMS.keyColor});
-    a = smoothstep(${CK_UNIFORMS.threshold}, ${CK_UNIFORMS.threshold} + ${CK_UNIFORMS.softness}, d);
+    if (soft <= 0.000001) {
+      a = step(${CK_UNIFORMS.threshold}, d);
+    } else {
+      a = smoothstep(${CK_UNIFORMS.threshold}, ${CK_UNIFORMS.threshold} + soft, d);
+    }
   }
   return a;
 }
