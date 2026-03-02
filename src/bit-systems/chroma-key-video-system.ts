@@ -62,10 +62,11 @@ const explicitQuery = defineQuery([ChromaKeyVideo]);
 const mediaVideoQuery = defineQuery([MediaVideo]);
 
 const AUTO_CHROMA_SETTINGS: RuntimeSettings = {
-  mode: ChromaKeyMode.LUMA,
+  mode: ChromaKeyMode.CHROMA,
   keyColor: [0, 0, 0],
-  threshold: 0.09,
-  softness: 0.08,
+  // Conservative defaults: only key near-pure black by default.
+  threshold: 0.003,
+  softness: 0.002,
   despill: 0.0,
   opacity: 1.0,
   invert: 0,
