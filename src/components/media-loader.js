@@ -395,6 +395,14 @@ AFRAME.registerComponent("media-loader", {
         thumbnail = result.meta && result.meta.thumbnail && proxiedUrlFor(result.meta.thumbnail);
       }
 
+      // Preserve explicit chroma hint across media resolution (origin URLs can drop query params).
+      if (parsedUrl.searchParams.has("_chroma")) {
+        const chromaHint = parsedUrl.searchParams.get("_chroma") || "";
+        const canonicalParsedUrl = new URL(canonicalUrl);
+        canonicalParsedUrl.searchParams.set("_chroma", chromaHint);
+        canonicalUrl = canonicalParsedUrl.href;
+      }
+
       // todo: we don't need to proxy for many things if the canonical URL has permissive CORS headers
       accessibleUrl = proxiedUrlFor(canonicalUrl);
 

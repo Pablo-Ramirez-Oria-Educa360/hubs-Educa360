@@ -230,7 +230,8 @@ export const addMedia = (
   if (needsToBeUploaded) {
     // Video camera videos are converted to mp4 for compatibility
     const desiredContentType = contentSubtype === "video-camera" ? "video/mp4" : src.type || guessContentType(src.name);
-    const hasChromaNameHint = /_chroma/i.test(src.name);
+    const baseName = src.name.replace(/\.[^/.]+$/, "");
+    const hasChromaNameHint = /_chroma$/i.test(baseName);
 
     upload(src, desiredContentType)
       .then(response => {
@@ -623,6 +624,7 @@ export async function resolveMediaInfo(urlString) {
   let canonicalAudioUrl = null; // set non-null only if audio track is separated from video track (eg. 360 video)
   let contentType;
   let thumbnail;
+  const chromaHint = url.searchParams.has("_chroma") ? url.searchParams.get("_chroma") || "" : null;
 
   // We want to resolve and proxy some hubs urls, like rooms and scene links,
   // but want to avoid proxying assets in order for this to work in dev environments
@@ -643,6 +645,13 @@ export async function resolveMediaInfo(urlString) {
 
     contentType = (response.meta && response.meta.expected_content_type) || contentType;
     thumbnail = response.meta && response.meta.thumbnail && proxiedUrlFor(response.meta.thumbnail);
+  }
+
+  // Preserve explicit chroma hint across media resolution (origin URLs can drop query params).
+  if (chromaHint !== null) {
+    const canonicalParsedUrl = new URL(canonicalUrl);
+    canonicalParsedUrl.searchParams.set("_chroma", chromaHint);
+    canonicalUrl = canonicalParsedUrl.href;
   }
 
   const accessibleUrl = proxiedUrlFor(canonicalUrl);

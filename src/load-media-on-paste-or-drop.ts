@@ -40,7 +40,8 @@ export function spawnFromUrl(text: string) {
 export async function spawnFromFileList(files: FileList) {
   for (const file of files) {
     const desiredContentType = file.type || guessContentType(file.name);
-    const hasChromaNameHint = /_chroma/i.test(file.name);
+    const baseName = file.name.replace(/\.[^/.]+$/, "");
+    const hasChromaNameHint = /_chroma$/i.test(baseName);
     const params = await upload(file, desiredContentType)
       .then(function (response: UploadResponse) {
         const srcUrl = new URL(response.origin);
