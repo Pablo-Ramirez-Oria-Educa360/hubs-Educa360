@@ -65,7 +65,7 @@ const AUTO_CHROMA_SETTINGS: RuntimeSettings = {
   mode: ChromaKeyMode.LUMA,
   keyColor: [0, 0, 0],
   // Strict near-black defaults in perceptual (sRGB-like) space.
-  threshold: 0.015,
+  threshold: 0.0001,
   softness: 0.0,
   despill: 0.0,
   opacity: 1.0,
@@ -156,7 +156,7 @@ function ensurePatchedShader(shader: ShaderLike) {
 
   shader.uniforms[CK_UNIFORMS.mode] = { value: ChromaKeyMode.CHROMA };
   shader.uniforms[CK_UNIFORMS.keyColor] = { value: { x: 0, y: 0, z: 0 } };
-  shader.uniforms[CK_UNIFORMS.threshold] = { value: 0.015 };
+  shader.uniforms[CK_UNIFORMS.threshold] = { value: 0.0001 };
   shader.uniforms[CK_UNIFORMS.softness] = { value: 0.0 };
   shader.uniforms[CK_UNIFORMS.despill] = { value: 0.0 };
   shader.uniforms[CK_UNIFORMS.opacity] = { value: 1.0 };
