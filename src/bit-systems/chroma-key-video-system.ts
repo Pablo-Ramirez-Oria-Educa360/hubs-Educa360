@@ -134,8 +134,17 @@ function getMediaSrc(world: HubsWorld, eid: number): string | null {
 
 function shouldAutoApplyByName(src: string | null): boolean {
   if (!src) return false;
+
+  // 1) Explicit query flag (preferred): ?_chroma=1 / true / yes / on
   try {
-    return decodeURIComponent(src).toLowerCase().includes("_chroma");
+    const url = new URL(src, window.location.href);
+    if (url.searchParams.has("_chroma")) {
+      const value = (url.searchParams.get("_chroma") || "").trim().toLowerCase();
+      return value === "" || value === "1" || value === "true" || value === "yes" || value === "on";
+    }
+
+    // 2) Backward-compatible fallback: `_chroma` in filename/path.
+    return decodeURIComponent(url.pathname).toLowerCase().includes("_chroma");
   } catch {
     return src.toLowerCase().includes("_chroma");
   }

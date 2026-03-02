@@ -40,10 +40,14 @@ export function spawnFromUrl(text: string) {
 export async function spawnFromFileList(files: FileList) {
   for (const file of files) {
     const desiredContentType = file.type || guessContentType(file.name);
+    const hasChromaNameHint = /_chroma/i.test(file.name);
     const params = await upload(file, desiredContentType)
       .then(function (response: UploadResponse) {
         const srcUrl = new URL(response.origin);
         srcUrl.searchParams.set("token", response.meta.access_token);
+        if (hasChromaNameHint) {
+          srcUrl.searchParams.set("_chroma", "1");
+        }
         return {
           src: srcUrl.href,
           recenter: true,

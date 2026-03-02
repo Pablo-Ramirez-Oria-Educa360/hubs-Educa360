@@ -230,11 +230,15 @@ export const addMedia = (
   if (needsToBeUploaded) {
     // Video camera videos are converted to mp4 for compatibility
     const desiredContentType = contentSubtype === "video-camera" ? "video/mp4" : src.type || guessContentType(src.name);
+    const hasChromaNameHint = /_chroma/i.test(src.name);
 
     upload(src, desiredContentType)
       .then(response => {
         const srcUrl = new URL(proxiedUrlFor(response.origin));
         srcUrl.searchParams.set("token", response.meta.access_token);
+        if (hasChromaNameHint) {
+          srcUrl.searchParams.set("_chroma", "1");
+        }
         entity.setAttribute("media-loader", { resolve: false, src: srcUrl.href, fileId: response.file_id });
         window.APP.store.update({
           uploadPromotionTokens: [{ fileId: response.file_id, promotionToken: response.meta.promotion_token }]
