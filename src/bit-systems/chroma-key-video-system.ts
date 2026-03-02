@@ -249,14 +249,14 @@ function patchMaterial(eid: number, mat: MaterialWithCustomProgramCacheKey) {
 
   mat.onBeforeCompile = (shader, renderer) => {
     if (state.originalOnBeforeCompile) {
-      state.originalOnBeforeCompile(shader, renderer);
+      state.originalOnBeforeCompile.call(mat, shader, renderer);
     }
     ensurePatchedShader(shader);
     state.shader = shader;
   };
 
   mat.customProgramCacheKey = () => {
-    const originalKey = state.originalCustomProgramCacheKey ? state.originalCustomProgramCacheKey() : "";
+    const originalKey = state.originalCustomProgramCacheKey ? state.originalCustomProgramCacheKey.call(mat) : "";
     return `${originalKey}${CK_PATCH_KEY}`;
   };
 
