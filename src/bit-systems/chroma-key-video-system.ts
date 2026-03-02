@@ -1,7 +1,7 @@
-import { defineQuery, enterQuery, entityExists, exitQuery, hasComponent } from "bitecs";
+import { defineQuery, entityExists, hasComponent } from "bitecs";
 import { Material } from "three";
 import { HubsWorld } from "../app";
-import { MaterialTag, Object3DTag } from "../bit-components";
+import { MaterialTag, MediaInfo, MediaVideo, NetworkedVideo, Object3DTag } from "../bit-components";
 import { ChromaKeyAlphaMode, ChromaKeyMode, ChromaKeyVideo } from "../components/chroma-key-video";
 
 type ShaderLike = {
@@ -29,6 +29,18 @@ type PatchState = {
   originalDepthWrite: boolean;
 };
 
+type RuntimeSettings = {
+  mode: ChromaKeyMode;
+  keyColor: [number, number, number];
+  threshold: number;
+  softness: number;
+  despill: number;
+  opacity: number;
+  invert: 0 | 1;
+  alphaMode: ChromaKeyAlphaMode;
+  alphaCutoff: number;
+};
+
 const CK_UNIFORMS = {
   mode: "ck_mode",
   keyColor: "ck_keyColor",
@@ -46,9 +58,20 @@ const CK_PATCH_KEY = "|hubs_ckv1";
 
 const states = new Map<number, PatchState>();
 
-const query = defineQuery([ChromaKeyVideo]);
-const enterQ = enterQuery(query);
-const exitQ = exitQuery(query);
+const explicitQuery = defineQuery([ChromaKeyVideo]);
+const mediaVideoQuery = defineQuery([MediaVideo]);
+
+const AUTO_CHROMA_SETTINGS: RuntimeSettings = {
+  mode: ChromaKeyMode.LUMA,
+  keyColor: [0, 0, 0],
+  threshold: 0.09,
+  softness: 0.08,
+  despill: 0.0,
+  opacity: 1.0,
+  invert: 0,
+  alphaMode: ChromaKeyAlphaMode.ALPHA_TEST,
+  alphaCutoff: 0.04
+};
 
 function resolveMaterialForEntity(world: HubsWorld, eid: number): MaterialWithCustomProgramCacheKey | undefined {
   if (hasComponent(world, MaterialTag, eid)) {
@@ -69,6 +92,53 @@ function setUniform(shader: ShaderLike | null, name: string, value: unknown) {
   if (!shader) return;
   if (!shader.uniforms[name]) return;
   shader.uniforms[name].value = value;
+}
+
+function readExplicitSettings(eid: number): RuntimeSettings {
+  return {
+    mode: ChromaKeyVideo.mode[eid],
+    keyColor: [
+      ChromaKeyVideo.keyColor[eid][0],
+      ChromaKeyVideo.keyColor[eid][1],
+      ChromaKeyVideo.keyColor[eid][2]
+    ],
+    threshold: ChromaKeyVideo.threshold[eid],
+    softness: ChromaKeyVideo.softness[eid],
+    despill: ChromaKeyVideo.despill[eid],
+    opacity: ChromaKeyVideo.opacity[eid],
+    invert: ChromaKeyVideo.invert[eid] ? 1 : 0,
+    alphaMode: ChromaKeyVideo.alphaMode[eid],
+    alphaCutoff: ChromaKeyVideo.alphaCutoff[eid]
+  };
+}
+
+function getMediaSrc(world: HubsWorld, eid: number): string | null {
+  if (hasComponent(world, MediaInfo, eid)) {
+    const sid = MediaInfo.accessibleUrl[eid];
+    if (sid) {
+      const src = APP.getString(sid);
+      if (src) return src;
+    }
+  }
+
+  if (hasComponent(world, NetworkedVideo, eid)) {
+    const sid = NetworkedVideo.src[eid];
+    if (sid) {
+      const src = APP.getString(sid);
+      if (src) return src;
+    }
+  }
+
+  return null;
+}
+
+function shouldAutoApplyByName(src: string | null): boolean {
+  if (!src) return false;
+  try {
+    return decodeURIComponent(src).toLowerCase().includes("_chroma");
+  } catch {
+    return src.toLowerCase().includes("_chroma");
+  }
 }
 
 function ensurePatchedShader(shader: ShaderLike) {
@@ -143,10 +213,10 @@ ${CK_PATCH_MARKER}
   );
 }
 
-function applyMaterialAlphaState(eid: number, mat: MaterialWithCustomProgramCacheKey) {
-  if (ChromaKeyVideo.alphaMode[eid] === ChromaKeyAlphaMode.ALPHA_TEST) {
+function applyMaterialAlphaState(mat: MaterialWithCustomProgramCacheKey, settings: RuntimeSettings) {
+  if (settings.alphaMode === ChromaKeyAlphaMode.ALPHA_TEST) {
     mat.transparent = false;
-    mat.alphaTest = ChromaKeyVideo.alphaCutoff[eid];
+    mat.alphaTest = settings.alphaCutoff;
     mat.depthWrite = true;
   } else {
     mat.transparent = true;
@@ -181,7 +251,6 @@ function patchMaterial(eid: number, mat: MaterialWithCustomProgramCacheKey) {
     return `${originalKey}${CK_PATCH_KEY}`;
   };
 
-  applyMaterialAlphaState(eid, mat);
   mat.needsUpdate = true;
 
   states.set(eid, state);
@@ -202,50 +271,77 @@ function unpatchMaterial(eid: number) {
   states.delete(eid);
 }
 
-function updateUniforms(eid: number) {
+function updateUniforms(eid: number, settings: RuntimeSettings) {
   const state = states.get(eid);
   if (!state || !state.shader) return;
 
-  setUniform(state.shader, CK_UNIFORMS.mode, ChromaKeyVideo.mode[eid]);
+  setUniform(state.shader, CK_UNIFORMS.mode, settings.mode);
   setUniform(state.shader, CK_UNIFORMS.keyColor, {
-    x: ChromaKeyVideo.keyColor[eid][0],
-    y: ChromaKeyVideo.keyColor[eid][1],
-    z: ChromaKeyVideo.keyColor[eid][2]
+    x: settings.keyColor[0],
+    y: settings.keyColor[1],
+    z: settings.keyColor[2]
   });
-  setUniform(state.shader, CK_UNIFORMS.threshold, ChromaKeyVideo.threshold[eid]);
-  setUniform(state.shader, CK_UNIFORMS.softness, ChromaKeyVideo.softness[eid]);
-  setUniform(state.shader, CK_UNIFORMS.despill, ChromaKeyVideo.despill[eid]);
-  setUniform(state.shader, CK_UNIFORMS.opacity, ChromaKeyVideo.opacity[eid]);
-  setUniform(state.shader, CK_UNIFORMS.invert, ChromaKeyVideo.invert[eid]);
-  setUniform(state.shader, CK_UNIFORMS.alphaMode, ChromaKeyVideo.alphaMode[eid]);
-  setUniform(state.shader, CK_UNIFORMS.alphaCutoff, ChromaKeyVideo.alphaCutoff[eid]);
+  setUniform(state.shader, CK_UNIFORMS.threshold, settings.threshold);
+  setUniform(state.shader, CK_UNIFORMS.softness, settings.softness);
+  setUniform(state.shader, CK_UNIFORMS.despill, settings.despill);
+  setUniform(state.shader, CK_UNIFORMS.opacity, settings.opacity);
+  setUniform(state.shader, CK_UNIFORMS.invert, settings.invert);
+  setUniform(state.shader, CK_UNIFORMS.alphaMode, settings.alphaMode);
+  setUniform(state.shader, CK_UNIFORMS.alphaCutoff, settings.alphaCutoff);
+}
+
+function ensurePatchedWithSettings(
+  eid: number,
+  mat: MaterialWithCustomProgramCacheKey,
+  settings: RuntimeSettings
+) {
+  let state = states.get(eid);
+  if (!state) {
+    patchMaterial(eid, mat);
+    state = states.get(eid);
+  } else if (state.material !== mat) {
+    unpatchMaterial(eid);
+    patchMaterial(eid, mat);
+    state = states.get(eid);
+  }
+  if (!state) return;
+
+  applyMaterialAlphaState(state.material, settings);
+  updateUniforms(eid, settings);
 }
 
 export function chromaKeyVideoMaterialSystem(world: HubsWorld) {
-  enterQ(world).forEach(eid => {
-    const mat = resolveMaterialForEntity(world, eid);
-    if (mat) patchMaterial(eid, mat);
-  });
+  const desiredEids = new Set<number>();
+  const explicitMaterials = new Set<MaterialWithCustomProgramCacheKey>();
 
-  query(world).forEach(eid => {
+  explicitQuery(world).forEach(eid => {
     if (!entityExists(world, eid)) return;
     const mat = resolveMaterialForEntity(world, eid);
     if (!mat) return;
 
-    let state = states.get(eid);
-    if (!state) {
-      patchMaterial(eid, mat);
-      state = states.get(eid);
-    } else if (state.material !== mat) {
-      unpatchMaterial(eid);
-      patchMaterial(eid, mat);
-      state = states.get(eid);
-    }
-    if (!state) return;
-
-    applyMaterialAlphaState(eid, state.material);
-    updateUniforms(eid);
+    desiredEids.add(eid);
+    explicitMaterials.add(mat);
+    ensurePatchedWithSettings(eid, mat, readExplicitSettings(eid));
   });
 
-  exitQ(world).forEach(eid => unpatchMaterial(eid));
+  mediaVideoQuery(world).forEach(eid => {
+    if (!entityExists(world, eid)) return;
+    if (hasComponent(world, ChromaKeyVideo, eid)) return;
+
+    const src = getMediaSrc(world, eid);
+    if (!shouldAutoApplyByName(src)) return;
+
+    const mat = resolveMaterialForEntity(world, eid);
+    if (!mat) return;
+    if (explicitMaterials.has(mat)) return;
+
+    desiredEids.add(eid);
+    ensurePatchedWithSettings(eid, mat, AUTO_CHROMA_SETTINGS);
+  });
+
+  states.forEach((_state, eid) => {
+    if (!desiredEids.has(eid) || !entityExists(world, eid)) {
+      unpatchMaterial(eid);
+    }
+  });
 }
