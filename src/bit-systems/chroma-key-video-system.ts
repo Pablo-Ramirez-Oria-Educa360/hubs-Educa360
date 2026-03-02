@@ -65,7 +65,7 @@ const AUTO_CHROMA_SETTINGS: RuntimeSettings = {
   mode: ChromaKeyMode.LUMA,
   keyColor: [0, 0, 0],
   // Strict luma-key defaults: remove near-pure black with hard edges.
-  threshold: 0.02,
+  threshold: 0.01,
   softness: 0.0,
   despill: 0.0,
   opacity: 1.0,
@@ -156,7 +156,7 @@ function ensurePatchedShader(shader: ShaderLike) {
 
   shader.uniforms[CK_UNIFORMS.mode] = { value: ChromaKeyMode.CHROMA };
   shader.uniforms[CK_UNIFORMS.keyColor] = { value: { x: 0, y: 0, z: 0 } };
-  shader.uniforms[CK_UNIFORMS.threshold] = { value: 0.02 };
+  shader.uniforms[CK_UNIFORMS.threshold] = { value: 0.01 };
   shader.uniforms[CK_UNIFORMS.softness] = { value: 0.0 };
   shader.uniforms[CK_UNIFORMS.despill] = { value: 0.0 };
   shader.uniforms[CK_UNIFORMS.opacity] = { value: 1.0 };
@@ -185,7 +185,8 @@ float ck_compute_alpha(vec3 rgb) {
   float soft = max(${CK_UNIFORMS.softness}, 0.0);
   float a;
   if (${CK_UNIFORMS.mode} == ${ChromaKeyMode.LUMA}) {
-    float lum = ck_luma(rgb);
+    // Near-black keying in RGB space to preserve dark-but-colored details.
+    float lum = max(max(rgb.r, rgb.g), rgb.b);
     if (soft <= 0.000001) {
       a = step(${CK_UNIFORMS.threshold}, lum);
     } else {

@@ -32,7 +32,7 @@ const DEFAULTS: Required<{
 }> = {
   mode: ChromaKeyMode.LUMA,
   keyColor: [0, 0, 0],
-  threshold: 0.02,
+  threshold: 0.01,
   softness: 0.0,
   despill: 0.0,
   opacity: 1.0,
