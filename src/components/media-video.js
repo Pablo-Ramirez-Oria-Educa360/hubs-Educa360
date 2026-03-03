@@ -6,7 +6,8 @@ import {
   createVideoOrAudioEl,
   createDashPlayer,
   createHLSPlayer,
-  hasAudioTracks
+  hasAudioTracks,
+  getMediaTransparencyMode
 } from "../utils/media-utils";
 import { disposeTexture } from "../utils/material-utils";
 import { SOUND_CAMERA_TOOL_TOOK_SNAPSHOT } from "../systems/sound-effects-system";
@@ -561,6 +562,9 @@ AFRAME.registerComponent("media-video", {
       this.el.setObject3D("mesh", this.mesh);
     }
 
+    const mediaTransparencyMode = getMediaTransparencyMode(this.data.src);
+    const isAlphaVideo = texture.isVideoTexture && mediaTransparencyMode === "alpha";
+
     if (!texture.isVideoTexture) {
       // Audio-only media uses the same component, but we don't want to render the black fallback card.
       // Keep the mesh for raycasting/hover menus, but make it fully transparent and non-occluding.
@@ -570,9 +574,10 @@ AFRAME.registerComponent("media-video", {
       this.mesh.material.depthWrite = false;
     } else {
       this.mesh.material.map = texture;
-      this.mesh.material.transparent = false;
+      this.mesh.material.transparent = isAlphaVideo;
       this.mesh.material.opacity = 1;
-      this.mesh.material.depthWrite = true;
+      this.mesh.material.depthWrite = !isAlphaVideo;
+      this.mesh.material.alphaTest = 0;
       if (projection === "flat") {
         scaleToAspectRatio(
           this.el,

@@ -9,6 +9,8 @@ import { EntityID } from "./networking-types";
 import { Networked, NetworkedVideo, ObjectMenuTarget } from "../bit-components";
 import { ObjectMenuTargetFlags } from "../inflators/object-menu-target";
 import { addComponent } from "bitecs";
+import { AlphaMode } from "./create-image-mesh";
+import { getMediaTransparencyMode } from "./media-utils";
 type Params = {
   loop?: boolean;
   autoPlay?: boolean;
@@ -32,6 +34,8 @@ export function* loadVideo(
   isNetworked: boolean
 ) {
   const { loop, autoPlay, controls, projection } = Object.assign({}, DEFAULTS, params);
+  const transparencyMode = getMediaTransparencyMode(url);
+  const alphaMode = transparencyMode === "alpha" ? AlphaMode.BLEND : AlphaMode.OPAQUE;
   const { texture, ratio, video }: { texture: HubsVideoTexture; ratio: number; video: HTMLVideoElement } =
     yield loadVideoTexture(url, contentType, loop, autoPlay);
 
@@ -48,7 +52,8 @@ export function* loadVideo(
         ratio,
         projection,
         video,
-        controls
+        controls,
+        alphaMode
       }}
     ></entity>
   );

@@ -1,5 +1,10 @@
 import { createNetworkedMedia } from "./utils/create-networked-entity";
-import { upload, parseURL } from "./utils/media-utils";
+import {
+  upload,
+  parseURL,
+  getTransparencyModeHintFromFileName,
+  applyTransparencyModeHintToUrl
+} from "./utils/media-utils";
 import { guessContentType } from "./utils/media-url-utils";
 import { AElement } from "aframe";
 import { Vector3 } from "three";
@@ -40,17 +45,14 @@ export function spawnFromUrl(text: string) {
 export async function spawnFromFileList(files: FileList) {
   for (const file of files) {
     const desiredContentType = file.type || guessContentType(file.name);
-    const baseName = file.name.replace(/\.[^/.]+$/, "");
-    const hasChromaNameHint = /_chroma$/i.test(baseName);
+    const transparencyModeHint = getTransparencyModeHintFromFileName(file.name);
     const params = await upload(file, desiredContentType)
       .then(function (response: UploadResponse) {
         const srcUrl = new URL(response.origin);
         srcUrl.searchParams.set("token", response.meta.access_token);
-        if (hasChromaNameHint) {
-          srcUrl.searchParams.set("_chroma", "1");
-        }
+        const hintedUrl = applyTransparencyModeHintToUrl(srcUrl.href, transparencyModeHint);
         return {
-          src: srcUrl.href,
+          src: hintedUrl,
           recenter: true,
           resize: !qsTruthy("noResize"),
           animateLoad: true,

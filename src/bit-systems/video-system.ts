@@ -34,10 +34,10 @@ import { JobRunner } from "../utils/coroutine-utils";
 import { swapObject3DComponent } from "../utils/jsx-entity";
 import { VIDEO_FLAGS } from "../inflators/video";
 import { HubsVideoTexture } from "../textures/HubsVideoTexture";
-import { create360ImageMesh, createImageMesh } from "../utils/create-image-mesh";
+import { AlphaMode, create360ImageMesh, createImageMesh } from "../utils/create-image-mesh";
 import { loadAudioTexture } from "../utils/load-audio-texture";
 import { loadVideoTexture } from "../utils/load-video-texture";
-import { resolveMediaInfo, MediaType } from "../utils/media-utils";
+import { getMediaTransparencyMode, resolveMediaInfo, MediaType } from "../utils/media-utils";
 import { EntityID } from "../utils/networking-types";
 import { ProjectionModeName, getProjectionNameFromProjection } from "../utils/projection-mode";
 import { disposeNode } from "../utils/three-utils";
@@ -78,14 +78,16 @@ function* loadSrc(
   }
 
   const { texture, ratio, video }: { texture: HubsVideoTexture; ratio: number; video: HTMLVideoElement } = data;
+  const transparencyMode = getMediaTransparencyMode(accessibleUrl);
+  const alphaMode = transparencyMode === "alpha" ? AlphaMode.BLEND : AlphaMode.OPAQUE;
 
   clearRollbacks(); // After this point, normal entity cleanup will take care of things
 
   let videoObj;
   if (projection === ProjectionModeName.SPHERE_EQUIRECTANGULAR) {
-    videoObj = create360ImageMesh(texture, ratio);
+    videoObj = create360ImageMesh(texture, alphaMode);
   } else {
-    videoObj = createImageMesh(texture, ratio);
+    videoObj = createImageMesh(texture, ratio, alphaMode);
   }
   MediaVideo.ratio[eid] = ratio;
   MediaVideoData.set(eid, video);

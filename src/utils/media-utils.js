@@ -40,6 +40,63 @@ export function mediaTypeName(type) {
   return MediaTypeName.get(type) || "unknown";
 }
 
+const TRANSPARENCY_HINT_TRUE_VALUES = new Set(["", "1", "true", "yes", "on"]);
+const TRANSPARENCY_BASE_URL = typeof window !== "undefined" ? window.location.href : "https://hubs.local/";
+
+function hasTruthyTransparencyFlag(url, flagName) {
+  if (!url.searchParams.has(flagName)) return false;
+  const value = (url.searchParams.get(flagName) || "").trim().toLowerCase();
+  return TRANSPARENCY_HINT_TRUE_VALUES.has(value);
+}
+
+export function getMediaTransparencyMode(src) {
+  if (!src) return null;
+
+  try {
+    const url = new URL(src, TRANSPARENCY_BASE_URL);
+    const alphaFromQuery = hasTruthyTransparencyFlag(url, "_alpha");
+    const chromaFromQuery = hasTruthyTransparencyFlag(url, "_chroma");
+    if (alphaFromQuery) return "alpha";
+    if (chromaFromQuery) return "chroma";
+
+    const path = decodeURIComponent(url.pathname).toLowerCase();
+    if (path.includes("_alpha")) return "alpha";
+    if (path.includes("_chroma")) return "chroma";
+  } catch {
+    const normalizedSrc = src.toLowerCase();
+    if (normalizedSrc.includes("_alpha")) return "alpha";
+    if (normalizedSrc.includes("_chroma")) return "chroma";
+  }
+
+  return null;
+}
+
+export function getTransparencyModeHintFromFileName(fileName) {
+  if (!fileName) return null;
+  const baseName = fileName.replace(/\.[^/.]+$/, "");
+  if (/_alpha$/i.test(baseName)) return "alpha";
+  if (/_chroma$/i.test(baseName)) return "chroma";
+  return null;
+}
+
+export function applyTransparencyModeHintToUrl(urlString, mode) {
+  if (!urlString || !mode) return urlString;
+
+  try {
+    const url = new URL(urlString, TRANSPARENCY_BASE_URL);
+    if (mode === "alpha") {
+      url.searchParams.set("_alpha", "1");
+      url.searchParams.delete("_chroma");
+    } else if (mode === "chroma") {
+      url.searchParams.set("_chroma", "1");
+      url.searchParams.delete("_alpha");
+    }
+    return url.href;
+  } catch {
+    return urlString;
+  }
+}
+
 const linkify = Linkify();
 linkify.tlds(tlds);
 
@@ -230,17 +287,14 @@ export const addMedia = (
   if (needsToBeUploaded) {
     // Video camera videos are converted to mp4 for compatibility
     const desiredContentType = contentSubtype === "video-camera" ? "video/mp4" : src.type || guessContentType(src.name);
-    const baseName = src.name.replace(/\.[^/.]+$/, "");
-    const hasChromaNameHint = /_chroma$/i.test(baseName);
+    const transparencyModeHint = getTransparencyModeHintFromFileName(src.name);
 
     upload(src, desiredContentType)
       .then(response => {
         const srcUrl = new URL(proxiedUrlFor(response.origin));
         srcUrl.searchParams.set("token", response.meta.access_token);
-        if (hasChromaNameHint) {
-          srcUrl.searchParams.set("_chroma", "1");
-        }
-        entity.setAttribute("media-loader", { resolve: false, src: srcUrl.href, fileId: response.file_id });
+        const hintedUrl = applyTransparencyModeHintToUrl(srcUrl.href, transparencyModeHint);
+        entity.setAttribute("media-loader", { resolve: false, src: hintedUrl, fileId: response.file_id });
         window.APP.store.update({
           uploadPromotionTokens: [{ fileId: response.file_id, promotionToken: response.meta.promotion_token }]
         });
@@ -624,7 +678,7 @@ export async function resolveMediaInfo(urlString) {
   let canonicalAudioUrl = null; // set non-null only if audio track is separated from video track (eg. 360 video)
   let contentType;
   let thumbnail;
-  const chromaHint = url.searchParams.has("_chroma") ? url.searchParams.get("_chroma") || "" : null;
+  const transparencyModeHint = getMediaTransparencyMode(url.href);
 
   // We want to resolve and proxy some hubs urls, like rooms and scene links,
   // but want to avoid proxying assets in order for this to work in dev environments
@@ -647,12 +701,8 @@ export async function resolveMediaInfo(urlString) {
     thumbnail = response.meta && response.meta.thumbnail && proxiedUrlFor(response.meta.thumbnail);
   }
 
-  // Preserve explicit chroma hint across media resolution (origin URLs can drop query params).
-  if (chromaHint !== null) {
-    const canonicalParsedUrl = new URL(canonicalUrl);
-    canonicalParsedUrl.searchParams.set("_chroma", chromaHint);
-    canonicalUrl = canonicalParsedUrl.href;
-  }
+  // Preserve explicit transparency hint across media resolution (origin URLs can drop query params).
+  canonicalUrl = applyTransparencyModeHintToUrl(canonicalUrl, transparencyModeHint);
 
   const accessibleUrl = proxiedUrlFor(canonicalUrl);
   if (!contentType) {

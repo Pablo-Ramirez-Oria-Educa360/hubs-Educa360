@@ -3,6 +3,7 @@ import { Material } from "three";
 import { HubsWorld } from "../app";
 import { MaterialTag, MediaInfo, MediaVideo, NetworkedVideo, Object3DTag } from "../bit-components";
 import { ChromaKeyAlphaMode, ChromaKeyMode, ChromaKeyVideo } from "../components/chroma-key-video";
+import { getMediaTransparencyMode } from "../utils/media-utils";
 
 type ShaderLike = {
   uniforms: Record<string, { value: unknown }>;
@@ -134,21 +135,7 @@ function getMediaSrc(world: HubsWorld, eid: number): string | null {
 }
 
 function shouldAutoApplyByName(src: string | null): boolean {
-  if (!src) return false;
-
-  // 1) Explicit query flag (preferred): ?_chroma=1 / true / yes / on
-  try {
-    const url = new URL(src, window.location.href);
-    if (url.searchParams.has("_chroma")) {
-      const value = (url.searchParams.get("_chroma") || "").trim().toLowerCase();
-      return value === "" || value === "1" || value === "true" || value === "yes" || value === "on";
-    }
-
-    // 2) Backward-compatible fallback: `_chroma` in filename/path.
-    return decodeURIComponent(url.pathname).toLowerCase().includes("_chroma");
-  } catch {
-    return src.toLowerCase().includes("_chroma");
-  }
+  return getMediaTransparencyMode(src) === "chroma";
 }
 
 function ensurePatchedShader(shader: ShaderLike) {
@@ -271,8 +258,15 @@ function patchMaterial(eid: number, mat: MaterialWithCustomProgramCacheKey) {
     state.shader = shader;
   };
 
-  mat.customProgramCacheKey = () => {
-    const originalKey = state.originalCustomProgramCacheKey ? state.originalCustomProgramCacheKey.call(mat) : "";
+  mat.customProgramCacheKey = function (this: MaterialWithCustomProgramCacheKey) {
+    let originalKey = "";
+    if (state.originalCustomProgramCacheKey) {
+      try {
+        originalKey = state.originalCustomProgramCacheKey.call(this);
+      } catch {
+        originalKey = "";
+      }
+    }
     return `${originalKey}${CK_PATCH_KEY}`;
   };
 
