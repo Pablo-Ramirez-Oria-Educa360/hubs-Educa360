@@ -56,6 +56,7 @@ const MAX_GAIN_MULTIPLIER = 2;
 const AUDIO_ONLY_PLAY_BUTTON_Z_OFFSET = 0.02;
 const PLAY_BUTTON_ONLY_RAYCAST_ORIGINAL = "__playButtonOnlyOriginalRaycast";
 const PLAY_BUTTON_HIT_TOLERANCE = 0.5;
+const PLAY_BUTTON_ONLY_MESH_DISTANCE_BIAS = 0.01;
 const _playButtonLocalPoint = new THREE.Vector3();
 
 function isInsidePlayButtonHitArea(playButtonObject3D, worldPoint) {
@@ -232,6 +233,8 @@ AFRAME.registerComponent("media-video", {
       for (let i = 0; i < localIntersections.length; i++) {
         const intersection = localIntersections[i];
         if (isInsidePlayButtonHitArea(playButtonObject3D, intersection.point)) {
+          // Keep media hit slightly farther than the UI button to avoid hover flicker between both.
+          intersection.distance += PLAY_BUTTON_ONLY_MESH_DISTANCE_BIAS;
           intersects.push(intersection);
           return;
         }
@@ -780,7 +783,7 @@ AFRAME.registerComponent("media-video", {
     this.seekBackButton.object3D.visible = false;
     this.playPauseButton.object3D.visible = showPlayButton;
 
-    if (showPlayButton && isAudioOnly) {
+    if (showPlayButton) {
       this.playPauseButton.object3D.position.copy(this.playPauseButtonBasePosition);
       this.playPauseButton.object3D.position.z += AUDIO_ONLY_PLAY_BUTTON_Z_OFFSET;
       this.playPauseButton.object3D.scale.copy(this.playPauseButtonBaseScale);
