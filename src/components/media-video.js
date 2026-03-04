@@ -1,5 +1,4 @@
 import audioIcon from "../assets/images/audio.png";
-import { paths } from "../systems/userinput/paths";
 import HLS from "hls.js";
 import {
   addAndArrangeMedia,
@@ -55,17 +54,17 @@ export function timeFmt(t) {
 
 const MAX_GAIN_MULTIPLIER = 2;
 const AUDIO_ONLY_PLAY_BUTTON_Z_OFFSET = 0.02;
-const AUDIO_ONLY_RAYCAST_ORIGINAL = "__audioOnlyOriginalRaycast";
-const AUDIO_ONLY_PLAY_HIT_TOLERANCE = 0.5;
-const _audioOnlyLocalPoint = new THREE.Vector3();
+const PLAY_BUTTON_ONLY_RAYCAST_ORIGINAL = "__playButtonOnlyOriginalRaycast";
+const PLAY_BUTTON_HIT_TOLERANCE = 0.5;
+const _playButtonLocalPoint = new THREE.Vector3();
 
 function isInsidePlayButtonHitArea(playButtonObject3D, worldPoint) {
   playButtonObject3D.updateWorldMatrix(true, false);
-  _audioOnlyLocalPoint.copy(worldPoint);
-  playButtonObject3D.worldToLocal(_audioOnlyLocalPoint);
+  _playButtonLocalPoint.copy(worldPoint);
+  playButtonObject3D.worldToLocal(_playButtonLocalPoint);
   return (
-    Math.abs(_audioOnlyLocalPoint.x) <= AUDIO_ONLY_PLAY_HIT_TOLERANCE &&
-    Math.abs(_audioOnlyLocalPoint.y) <= AUDIO_ONLY_PLAY_HIT_TOLERANCE
+    Math.abs(_playButtonLocalPoint.x) <= PLAY_BUTTON_HIT_TOLERANCE &&
+    Math.abs(_playButtonLocalPoint.y) <= PLAY_BUTTON_HIT_TOLERANCE
   );
 }
 
@@ -114,7 +113,7 @@ AFRAME.registerComponent("media-video", {
     this.onSnapImageLoaded = () => (this.isSnapping = false);
     this.hasAudioTracks = false;
     this.isAudioOnly = false;
-    this.audioOnlyPatchedMesh = null;
+    this.playButtonOnlyPatchedMesh = null;
 
     this.el.setAttribute("hover-menu__video", { template: "#video-hover-menu", isFlat: true });
     this.el.components["hover-menu__video"].getHoverMenu().then(menu => {
@@ -205,20 +204,20 @@ AFRAME.registerComponent("media-video", {
     this.el.addEventListener("audio_type_changed", this.setupAudio);
   },
 
-  restoreAudioOnlyMeshRaycast() {
-    if (!this.audioOnlyPatchedMesh) return;
-    if (this.audioOnlyPatchedMesh[AUDIO_ONLY_RAYCAST_ORIGINAL]) {
-      this.audioOnlyPatchedMesh.raycast = this.audioOnlyPatchedMesh[AUDIO_ONLY_RAYCAST_ORIGINAL];
-      delete this.audioOnlyPatchedMesh[AUDIO_ONLY_RAYCAST_ORIGINAL];
+  restorePlayButtonOnlyMeshRaycast() {
+    if (!this.playButtonOnlyPatchedMesh) return;
+    if (this.playButtonOnlyPatchedMesh[PLAY_BUTTON_ONLY_RAYCAST_ORIGINAL]) {
+      this.playButtonOnlyPatchedMesh.raycast = this.playButtonOnlyPatchedMesh[PLAY_BUTTON_ONLY_RAYCAST_ORIGINAL];
+      delete this.playButtonOnlyPatchedMesh[PLAY_BUTTON_ONLY_RAYCAST_ORIGINAL];
     }
-    this.audioOnlyPatchedMesh = null;
+    this.playButtonOnlyPatchedMesh = null;
   },
 
-  patchAudioOnlyMeshRaycast(mesh) {
-    if (!mesh || mesh[AUDIO_ONLY_RAYCAST_ORIGINAL]) return;
+  patchPlayButtonOnlyMeshRaycast(mesh) {
+    if (!mesh || mesh[PLAY_BUTTON_ONLY_RAYCAST_ORIGINAL]) return;
 
     const originalRaycast = mesh.raycast;
-    mesh[AUDIO_ONLY_RAYCAST_ORIGINAL] = originalRaycast;
+    mesh[PLAY_BUTTON_ONLY_RAYCAST_ORIGINAL] = originalRaycast;
     mesh.raycast = (raycaster, intersects) => {
       const localIntersections = [];
       originalRaycast.call(mesh, raycaster, localIntersections);
@@ -239,22 +238,22 @@ AFRAME.registerComponent("media-video", {
       }
     };
 
-    this.audioOnlyPatchedMesh = mesh;
+    this.playButtonOnlyPatchedMesh = mesh;
   },
 
-  setAudioOnlyMeshRaycastEnabled(enabled) {
+  setPlayButtonOnlyMeshRaycastEnabled(enabled) {
     const mesh = this.el.getObject3D("mesh");
     if (!enabled || !mesh || !this.playPauseButton) {
-      this.restoreAudioOnlyMeshRaycast();
+      this.restorePlayButtonOnlyMeshRaycast();
       return;
     }
 
-    if (this.audioOnlyPatchedMesh === mesh && mesh[AUDIO_ONLY_RAYCAST_ORIGINAL]) {
+    if (this.playButtonOnlyPatchedMesh === mesh && mesh[PLAY_BUTTON_ONLY_RAYCAST_ORIGINAL]) {
       return;
     }
 
-    this.restoreAudioOnlyMeshRaycast();
-    this.patchAudioOnlyMeshRaycast(mesh);
+    this.restorePlayButtonOnlyMeshRaycast();
+    this.patchPlayButtonOnlyMeshRaycast(mesh);
   },
 
   play() {
@@ -758,35 +757,30 @@ AFRAME.registerComponent("media-video", {
   updateHoverMenu() {
     if (!this.hoverMenu) return;
 
-    const mediaLoader = this.el.components["media-loader"].data;
     const isAudioOnly =
       this.isAudioOnly ||
       this.data.contentType.startsWith("audio/") ||
       (!!this.video && this.video.videoWidth === 0 && this.video.videoHeight === 0 && this.hasAudioTracks);
+    const mediaLoader = this.el.components["media-loader"].data;
     const pinnableElement = mediaLoader.linkedEl || this.el;
     const isPinned = pinnableElement.components.pinnable && pinnableElement.components.pinnable.data.pinned;
-    this.playbackControls.object3D.visible = !this.data.hidePlaybackControls && !!this.video;
-    this.timeLabel.object3D.visible = !isAudioOnly && !this.data.hidePlaybackControls;
-    this.volumeLabel.object3D.visible =
-      this.volumeUpButton.object3D.visible =
-      this.volumeDownButton.object3D.visible =
-        !isAudioOnly && this.hasAudioTracks && !this.data.hidePlaybackControls && !!this.video;
-
-    this.snapButton.object3D.visible =
-      !!this.video && !isAudioOnly && window.APP.hubChannel.can("spawn_and_move_media");
-    this.seekForwardButton.object3D.visible = !isAudioOnly && !!this.video && !this.videoIsLive;
-
     const mayModifyPlayHead =
       !!this.video && !this.videoIsLive && (!isPinned || window.APP.hubChannel.can("pin_objects"));
     const mayModifyAudioPlayHead = !!this.video && !this.videoIsLive;
+    const showPlayButton = isAudioOnly ? mayModifyAudioPlayHead : mayModifyPlayHead;
 
-    this.playPauseButton.object3D.visible =
-      this.seekForwardButton.object3D.visible =
-      this.seekBackButton.object3D.visible =
-        !isAudioOnly && mayModifyPlayHead;
+    // Force play-only UX for all media-videos: hide seek/volume/time/snap/link.
+    this.playbackControls.object3D.visible = !!this.video;
+    this.timeLabel.object3D.visible = false;
+    this.volumeLabel.object3D.visible = false;
+    this.volumeUpButton.object3D.visible = false;
+    this.volumeDownButton.object3D.visible = false;
+    this.snapButton.object3D.visible = false;
+    this.seekForwardButton.object3D.visible = false;
+    this.seekBackButton.object3D.visible = false;
+    this.playPauseButton.object3D.visible = showPlayButton;
 
-    if (isAudioOnly) {
-      this.playPauseButton.object3D.visible = mayModifyAudioPlayHead;
+    if (showPlayButton && isAudioOnly) {
       this.playPauseButton.object3D.position.copy(this.playPauseButtonBasePosition);
       this.playPauseButton.object3D.position.z += AUDIO_ONLY_PLAY_BUTTON_Z_OFFSET;
       this.playPauseButton.object3D.scale.copy(this.playPauseButtonBaseScale);
@@ -796,21 +790,16 @@ AFRAME.registerComponent("media-video", {
     }
 
     const isBitecsBasedClient = !!APP.hub?.user_data?.hubs_use_bitecs_based_client;
-    this.setAudioOnlyMeshRaycastEnabled(isAudioOnly && mayModifyAudioPlayHead && !isBitecsBasedClient);
+    const restrictFrameRaycastToPlayButton = !!this.video && this.data.projection === "flat";
+    this.setPlayButtonOnlyMeshRaycastEnabled(
+      restrictFrameRaycastToPlayButton && showPlayButton && !isBitecsBasedClient
+    );
 
-    this.linkButton.object3D.visible = !!mediaLoader.mediaOptions.href && !isAudioOnly;
-    if (isAudioOnly) {
-      this.linkButton.classList.remove("ui");
-      this.linkButton.removeAttribute("is-remote-hover-target");
-      if (this.linkButton.hasAttribute("open-media-button")) {
-        this.linkButton.removeAttribute("open-media-button");
-      }
-    } else {
-      this.linkButton.classList.add("ui");
-      this.linkButton.setAttribute("is-remote-hover-target", "");
-      if (this.linkButtonHasOpenMediaButton && !this.linkButton.hasAttribute("open-media-button")) {
-        this.linkButton.setAttribute("open-media-button", "");
-      }
+    this.linkButton.object3D.visible = false;
+    this.linkButton.classList.remove("ui");
+    this.linkButton.removeAttribute("is-remote-hover-target");
+    if (this.linkButton.hasAttribute("open-media-button")) {
+      this.linkButton.removeAttribute("open-media-button");
     }
 
     if (this.videoIsLive) {
@@ -831,16 +820,7 @@ AFRAME.registerComponent("media-video", {
     return function () {
       if (!this.video) return;
 
-      const userinput = this.el.sceneEl.systems.userinput;
       const interaction = this.el.sceneEl.systems.interaction;
-      const volumeModRight = userinput.get(paths.actions.cursor.right.mediaVolumeMod);
-      if (interaction.state.rightRemote.hovered === this.el && volumeModRight) {
-        this.changeVolumeBy(volumeModRight);
-      }
-      const volumeModLeft = userinput.get(paths.actions.cursor.left.mediaVolumeMod);
-      if (interaction.state.leftRemote.hovered === this.el && volumeModLeft) {
-        this.changeVolumeBy(volumeModLeft);
-      }
 
       const isHeld = interaction.isHeld(this.el);
 
@@ -882,7 +862,7 @@ AFRAME.registerComponent("media-video", {
 
   remove() {
     this.cleanUp();
-    this.restoreAudioOnlyMeshRaycast();
+    this.restorePlayButtonOnlyMeshRaycast();
 
     APP.isAudioPaused.delete(this.el);
 
