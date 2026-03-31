@@ -81,9 +81,9 @@ const AUTO_CHROMA_SETTINGS: RuntimeSettings = {
   keyColor: [0.028053, 0.211918, 0.052411],
   // Use blended edges for green-screen footage to avoid hard black halos and
   // keep compressed edge pixels from being forced fully opaque.
-  threshold: 0.075,
-  softness: 0.14,
-  despill: 0.3,
+  threshold: 0.05,
+  softness: 0.08,
+  despill: 0.1,
   opacity: 1.0,
   invert: 0,
   alphaMode: ChromaKeyAlphaMode.BLEND,
