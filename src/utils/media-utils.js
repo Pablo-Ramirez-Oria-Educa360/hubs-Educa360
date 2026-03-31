@@ -55,16 +55,20 @@ export function getMediaTransparencyMode(src) {
   try {
     const url = new URL(src, TRANSPARENCY_BASE_URL);
     const alphaFromQuery = hasTruthyTransparencyFlag(url, "_alpha");
+    const lumaFromQuery = hasTruthyTransparencyFlag(url, "_luma");
     const chromaFromQuery = hasTruthyTransparencyFlag(url, "_chroma");
     if (alphaFromQuery) return "alpha";
+    if (lumaFromQuery) return "luma";
     if (chromaFromQuery) return "chroma";
 
     const path = decodeURIComponent(url.pathname).toLowerCase();
     if (path.includes("_alpha")) return "alpha";
+    if (path.includes("_luma")) return "luma";
     if (path.includes("_chroma")) return "chroma";
   } catch {
     const normalizedSrc = src.toLowerCase();
     if (normalizedSrc.includes("_alpha")) return "alpha";
+    if (normalizedSrc.includes("_luma")) return "luma";
     if (normalizedSrc.includes("_chroma")) return "chroma";
   }
 
@@ -75,6 +79,7 @@ export function getTransparencyModeHintFromFileName(fileName) {
   if (!fileName) return null;
   const baseName = fileName.replace(/\.[^/.]+$/, "");
   if (/_alpha$/i.test(baseName)) return "alpha";
+  if (/_luma$/i.test(baseName)) return "luma";
   if (/_chroma$/i.test(baseName)) return "chroma";
   return null;
 }
@@ -86,10 +91,16 @@ export function applyTransparencyModeHintToUrl(urlString, mode) {
     const url = new URL(urlString, TRANSPARENCY_BASE_URL);
     if (mode === "alpha") {
       url.searchParams.set("_alpha", "1");
+      url.searchParams.delete("_luma");
+      url.searchParams.delete("_chroma");
+    } else if (mode === "luma") {
+      url.searchParams.delete("_alpha");
+      url.searchParams.set("_luma", "1");
       url.searchParams.delete("_chroma");
     } else if (mode === "chroma") {
-      url.searchParams.set("_chroma", "1");
       url.searchParams.delete("_alpha");
+      url.searchParams.delete("_luma");
+      url.searchParams.set("_chroma", "1");
     }
     return url.href;
   } catch {

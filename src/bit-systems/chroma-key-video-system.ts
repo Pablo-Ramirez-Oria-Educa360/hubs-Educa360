@@ -62,13 +62,26 @@ const states = new Map<number, PatchState>();
 const explicitQuery = defineQuery([ChromaKeyVideo]);
 const mediaVideoQuery = defineQuery([MediaVideo]);
 
-const AUTO_CHROMA_SETTINGS: RuntimeSettings = {
+const AUTO_LUMA_SETTINGS: RuntimeSettings = {
   mode: ChromaKeyMode.LUMA,
   keyColor: [0, 0, 0],
   // Strict near-black defaults in perceptual (sRGB-like) space.
   threshold: 0.0001,
   softness: 0.0,
   despill: 0.0,
+  opacity: 1.0,
+  invert: 0,
+  alphaMode: ChromaKeyAlphaMode.ALPHA_TEST,
+  alphaCutoff: 0.5
+};
+
+const AUTO_CHROMA_SETTINGS: RuntimeSettings = {
+  mode: ChromaKeyMode.CHROMA,
+  keyColor: [0, 1, 0],
+  // Tuned for classic green-screen footage rather than near-black removal.
+  threshold: 0.35,
+  softness: 0.08,
+  despill: 0.35,
   opacity: 1.0,
   invert: 0,
   alphaMode: ChromaKeyAlphaMode.ALPHA_TEST,
@@ -134,8 +147,11 @@ function getMediaSrc(world: HubsWorld, eid: number): string | null {
   return null;
 }
 
-function shouldAutoApplyByName(src: string | null): boolean {
-  return getMediaTransparencyMode(src) === "chroma";
+function getAutoTransparencySettings(src: string | null): RuntimeSettings | null {
+  const mode = getMediaTransparencyMode(src);
+  if (mode === "luma") return AUTO_LUMA_SETTINGS;
+  if (mode === "chroma") return AUTO_CHROMA_SETTINGS;
+  return null;
 }
 
 function ensurePatchedShader(shader: ShaderLike) {
@@ -348,14 +364,15 @@ export function chromaKeyVideoMaterialSystem(world: HubsWorld) {
     if (hasComponent(world, ChromaKeyVideo, eid)) return;
 
     const src = getMediaSrc(world, eid);
-    if (!shouldAutoApplyByName(src)) return;
+    const autoSettings = getAutoTransparencySettings(src);
+    if (!autoSettings) return;
 
     const mat = resolveMaterialForEntity(world, eid);
     if (!mat) return;
     if (explicitMaterials.has(mat)) return;
 
     desiredEids.add(eid);
-    ensurePatchedWithSettings(eid, mat, AUTO_CHROMA_SETTINGS);
+    ensurePatchedWithSettings(eid, mat, autoSettings);
   });
 
   states.forEach((_state, eid) => {
