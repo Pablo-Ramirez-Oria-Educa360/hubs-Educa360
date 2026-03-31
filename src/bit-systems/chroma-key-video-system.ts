@@ -79,13 +79,15 @@ const AUTO_CHROMA_SETTINGS: RuntimeSettings = {
   mode: ChromaKeyMode.CHROMA,
   // Representative green-screen sample converted from sRGB canvas sampling to linear space.
   keyColor: [0.028053, 0.211918, 0.052411],
-  threshold: 0.12,
-  softness: 0.08,
-  despill: 0.25,
+  // Use blended edges for green-screen footage to avoid hard black halos and
+  // keep compressed edge pixels from being forced fully opaque.
+  threshold: 0.075,
+  softness: 0.14,
+  despill: 0.3,
   opacity: 1.0,
   invert: 0,
-  alphaMode: ChromaKeyAlphaMode.ALPHA_TEST,
-  alphaCutoff: 0.5
+  alphaMode: ChromaKeyAlphaMode.BLEND,
+  alphaCutoff: 0.0
 };
 
 function resolveMaterialForEntity(world: HubsWorld, eid: number): MaterialWithCustomProgramCacheKey | undefined {
