@@ -77,11 +77,11 @@ const AUTO_LUMA_SETTINGS: RuntimeSettings = {
 
 const AUTO_CHROMA_SETTINGS: RuntimeSettings = {
   mode: ChromaKeyMode.CHROMA,
-  keyColor: [0, 1, 0],
-  // Tuned for classic green-screen footage rather than near-black removal.
-  threshold: 0.35,
+  // Representative green-screen sample converted from sRGB canvas sampling to linear space.
+  keyColor: [0.028053, 0.211918, 0.052411],
+  threshold: 0.12,
   softness: 0.08,
-  despill: 0.35,
+  despill: 0.25,
   opacity: 1.0,
   invert: 0,
   alphaMode: ChromaKeyAlphaMode.ALPHA_TEST,
