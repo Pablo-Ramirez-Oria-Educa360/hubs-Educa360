@@ -77,13 +77,12 @@ const AUTO_LUMA_SETTINGS: RuntimeSettings = {
 
 const AUTO_CHROMA_SETTINGS: RuntimeSettings = {
   mode: ChromaKeyMode.CHROMA,
-  // Representative green-screen sample converted from sRGB canvas sampling to linear space.
-  keyColor: [0.028053, 0.211918, 0.052411],
-  // Use blended edges for green-screen footage to avoid hard black halos and
-  // keep compressed edge pixels from being forced fully opaque.
-  threshold: 0.05,
-  softness: 0.08,
-  despill: 0.1,
+  // Standard chroma green in linear RGB (#00B140 in sRGB), but keep the
+  // auto preset conservative enough to avoid eating into the subject.
+  keyColor: [0.0, 0.445201, 0.051269],
+  threshold: 0.1,
+  softness: 0.1,
+  despill: 0.18,
   opacity: 1.0,
   invert: 0,
   alphaMode: ChromaKeyAlphaMode.BLEND,
