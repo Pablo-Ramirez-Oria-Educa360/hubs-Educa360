@@ -77,11 +77,11 @@ const AUTO_LUMA_SETTINGS: RuntimeSettings = {
 
 const AUTO_CHROMA_SETTINGS: RuntimeSettings = {
   mode: ChromaKeyMode.CHROMA,
-  // Standard chroma green in linear RGB (#00B140 in sRGB), but keep the
-  // auto preset conservative enough to avoid eating into the subject.
-  keyColor: [0.0, 0.445201, 0.051269],
-  threshold: 0.1,
-  softness: 0.1,
+  // Use a canonical green target. Chroma matching is evaluated in perceptual
+  // space, so threshold can stay generic across darker/brighter green screens.
+  keyColor: [0.0, 1.0, 0.0],
+  threshold: 0.075,
+  softness: 0.05,
   despill: 0.18,
   opacity: 1.0,
   invert: 0,
@@ -189,6 +189,20 @@ vec3 ck_linear_to_srgb_approx(vec3 c) {
   return pow(clamp(c, 0.0, 1.0), vec3(1.0 / 2.2));
 }
 
+vec3 ck_rgb_to_hsv(vec3 c) {
+  vec4 K = vec4(0.0, -1.0 / 3.0, 2.0 / 3.0, -1.0);
+  vec4 p = mix(vec4(c.bg, K.wz), vec4(c.gb, K.xy), step(c.b, c.g));
+  vec4 q = mix(vec4(p.xyw, c.r), vec4(c.r, p.yzx), step(p.x, c.r));
+  float d = q.x - min(q.w, q.y);
+  float e = 1.0e-10;
+  return vec3(abs(q.z + (q.w - q.y) / (6.0 * d + e)), d / (q.x + e), q.x);
+}
+
+float ck_hue_distance(float a, float b) {
+  float d = abs(a - b);
+  return min(d, 1.0 - d);
+}
+
 float ck_compute_alpha(vec3 rgb) {
   float soft = max(${CK_UNIFORMS.softness}, 0.0);
   float a;
@@ -201,16 +215,23 @@ float ck_compute_alpha(vec3 rgb) {
     } else {
       a = smoothstep(${CK_UNIFORMS.threshold}, ${CK_UNIFORMS.threshold} + soft, lum);
     }
-    if (${CK_UNIFORMS.invert} == 1) {
-      a = 1.0 - a;
-    }
   } else {
-    float d = distance(rgb, ${CK_UNIFORMS.keyColor});
+    vec3 rgbSrgb = ck_linear_to_srgb_approx(rgb);
+    vec3 keySrgb = ck_linear_to_srgb_approx(${CK_UNIFORMS.keyColor});
+    vec3 hsv = ck_rgb_to_hsv(rgbSrgb);
+    vec3 keyHsv = ck_rgb_to_hsv(keySrgb);
+    float d = ck_hue_distance(hsv.x, keyHsv.x);
+    float satMask = smoothstep(0.05, 0.18, hsv.y);
+    float keyed;
     if (soft <= 0.000001) {
-      a = step(${CK_UNIFORMS.threshold}, d);
+      keyed = (1.0 - step(${CK_UNIFORMS.threshold}, d)) * satMask;
     } else {
-      a = smoothstep(${CK_UNIFORMS.threshold}, ${CK_UNIFORMS.threshold} + soft, d);
+      keyed = (1.0 - smoothstep(${CK_UNIFORMS.threshold}, ${CK_UNIFORMS.threshold} + soft, d)) * satMask;
     }
+    a = 1.0 - keyed;
+  }
+  if (${CK_UNIFORMS.invert} == 1) {
+    a = 1.0 - a;
   }
   return a;
 }
