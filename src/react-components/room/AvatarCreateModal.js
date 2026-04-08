@@ -17,7 +17,7 @@ export function AvatarCreateModal({ onImport, onCreate, onClose }) {
           <FormattedMessage id="avatar-create-modal.body" defaultMessage="Choose how you want to add your avatar." />
         </p>
         <Button preset="primary" lg onClick={onCreate}>
-          <FormattedMessage id="avatar-create-modal.create" defaultMessage="Use Avatar Maker" />
+          <FormattedMessage id="avatar-create-modal.create" defaultMessage="Use Avatar Composer" />
         </Button>
         <Button preset="basic" lg onClick={onImport}>
           <FormattedMessage id="avatar-create-modal.import" defaultMessage="Import GLB" />

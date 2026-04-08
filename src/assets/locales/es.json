@@ -177,7 +177,7 @@
   "media-browser.create-avatar": "Crear avatar",
   "avatar-create-modal.title": "Crear avatar",
   "avatar-create-modal.body": "Elige cómo quieres añadir tu avatar.",
-  "avatar-create-modal.create": "Usar Avatar Maker",
+  "avatar-create-modal.create": "Usar Avatar Composer",
   "avatar-create-modal.import": "Importar GLB",
   "media-browser.create-scene": "Crear escena con {editorName}",
   "media-browser.empty.favorites": "No tienes ningún favorito. Haz clic en ⭐ para agregarlo a tus favoritos.",
