@@ -191,6 +191,8 @@ function handleClicks(world: HubsWorld, menu: EntityID) {
 function shouldShowSimplePlayButton(world: HubsWorld, videoEid: EntityID) {
   const video = MediaVideoData.get(videoEid);
   if (!video) return false;
+  const hubChannel = APP.hubChannel;
+  if (!hubChannel) return false;
 
   const isAudioOnly = MediaInfo.mediaType[videoEid] === MediaType.AUDIO;
   const isLive = video.duration === Infinity;
@@ -198,7 +200,7 @@ function shouldShowSimplePlayButton(world: HubsWorld, videoEid: EntityID) {
   const pinnableTarget = mediaLoader || videoEid;
   const pinned = isPinned(pinnableTarget);
 
-  const mayModifyPlayHead = !isLive && (!pinned || APP.hubChannel.can("pin_objects"));
+  const mayModifyPlayHead = !isLive && (!pinned || hubChannel.can("pin_objects"));
   const mayModifyAudioPlayHead = !isLive;
 
   return isAudioOnly ? mayModifyAudioPlayHead : mayModifyPlayHead;
