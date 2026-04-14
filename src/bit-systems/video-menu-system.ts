@@ -34,18 +34,19 @@ import { MediaType } from "../utils/media-utils";
 import { VolumeControlsMaterial } from "../prefabs/video-menu";
 import { updateAudioSettings } from "../update-audio-settings";
 import { VIDEO_FLAGS } from "../inflators/video";
+import { isPinned } from "./networking";
 
 const videoMenuQuery = defineQuery([VideoMenu]);
 const hoveredQuery = defineQuery([HoveredRemoteRight]);
 const sliderHalfWidth = 0.475;
+const SIMPLE_PLAY_BUTTON_Y = -0.125;
+const SIMPLE_PLAY_BUTTON_Z = 0.021;
 
 function setCursorRaycastable(world: HubsWorld, menu: number, enable: boolean) {
   let change = enable ? addComponent : removeComponent;
   change(world, CursorRaycastable, menu);
-  change(world, CursorRaycastable, VideoMenu.trackRef[menu]);
   change(world, CursorRaycastable, VideoMenu.playIndicatorRef[menu]);
   change(world, CursorRaycastable, VideoMenu.pauseIndicatorRef[menu]);
-  change(world, CursorRaycastable, VideoMenu.snapRef[menu]);
 }
 
 const intersectInThePlaneOf = (() => {
@@ -187,6 +188,22 @@ function handleClicks(world: HubsWorld, menu: EntityID) {
   }
 }
 
+function shouldShowSimplePlayButton(world: HubsWorld, videoEid: EntityID) {
+  const video = MediaVideoData.get(videoEid);
+  if (!video) return false;
+
+  const isAudioOnly = MediaInfo.mediaType[videoEid] === MediaType.AUDIO;
+  const isLive = video.duration === Infinity;
+  const mediaLoader = findAncestorWithComponent(world, MediaLoader, videoEid);
+  const pinnableTarget = mediaLoader || videoEid;
+  const pinned = isPinned(pinnableTarget);
+
+  const mayModifyPlayHead = !isLive && (!pinned || APP.hubChannel.can("pin_objects"));
+  const mayModifyAudioPlayHead = !isLive;
+
+  return isAudioOnly ? mayModifyAudioPlayHead : mayModifyPlayHead;
+}
+
 let intersectionPoint = new Vector3();
 export function videoMenuSystem(world: HubsWorld, userinput: any, sceneIsFrozen: boolean) {
   const rightVideoMenu = videoMenuQuery(world)[0];
@@ -207,6 +224,25 @@ export function videoMenuSystem(world: HubsWorld, userinput: any, sceneIsFrozen:
       playIndicatorObj.visible = false;
       pauseIndicatorObj.visible = true;
     }
+
+    const sliderObj = world.eid2obj.get(VideoMenu.sliderRef[eid])!;
+    const timeLabel = world.eid2obj.get(VideoMenu.timeLabelRef[eid])! as TroikaText;
+    const snapButtonObj = world.eid2obj.get(VideoMenu.snapRef[eid])!;
+    const volumeControlsObj = world.eid2obj.get(VideoMenu.volUpRef[eid])?.parent;
+    const showPlayButton = shouldShowSimplePlayButton(world, videoEid);
+
+    sliderObj.visible = false;
+    timeLabel.visible = false;
+    snapButtonObj.visible = false;
+    if (volumeControlsObj) {
+      volumeControlsObj.visible = false;
+    }
+    playIndicatorObj.visible = showPlayButton && video.paused;
+    pauseIndicatorObj.visible = showPlayButton && !video.paused;
+    playIndicatorObj.position.set(0, SIMPLE_PLAY_BUTTON_Y, SIMPLE_PLAY_BUTTON_Z);
+    pauseIndicatorObj.position.set(0, SIMPLE_PLAY_BUTTON_Y, SIMPLE_PLAY_BUTTON_Z);
+    playIndicatorObj.matrixNeedsUpdate = true;
+    pauseIndicatorObj.matrixNeedsUpdate = true;
 
     handleClicks(world, eid);
 
@@ -238,14 +274,12 @@ export function videoMenuSystem(world: HubsWorld, userinput: any, sceneIsFrozen:
 
     const ratio = MediaVideo.ratio[videoEid];
 
-    const timeLabel = world.eid2obj.get(VideoMenu.timeLabelRef[eid])! as TroikaText;
     timeLabel.text = `${timeFmt(video.currentTime)} / ${timeFmt(video.duration)}`;
     timeLabel.position.setY(ratio / 2 - 0.02);
     timeLabel.matrixNeedsUpdate = true;
 
-    const slider = world.eid2obj.get(VideoMenu.sliderRef[eid])!;
-    slider.position.setY(-(ratio / 2) + 0.025);
-    slider.matrixNeedsUpdate = true;
+    sliderObj.position.setY(-(ratio / 2) + 0.025);
+    sliderObj.matrixNeedsUpdate = true;
   });
 
   flushToObject3Ds(world, rightVideoMenu, sceneIsFrozen);

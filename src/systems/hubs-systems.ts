@@ -50,6 +50,7 @@ import { mediaLoadingSystem } from "../bit-systems/media-loading";
 // import { holdableButtonSystem } from "./holdable-button-system";
 import { physicsCompatSystem } from "./bit-physics";
 import { destroyAtExtremeDistanceSystem } from "./bit-destroy-at-extreme-distances";
+import { videoMenuSystem } from "../bit-systems/video-menu-system";
 import { objectMenuSystem } from "../bit-systems/object-menu";
 import { pdfMenuSystem } from "../bit-systems/pdf-menu-system";
 import { linkHoverMenuSystem } from "../bit-systems/link-hover-menu";
@@ -285,6 +286,7 @@ export function mainTick(xrFrame: XRFrame, renderer: WebGLRenderer, scene: Scene
   hubsSystems.shadowSystem.tick();
   objectMenuSystem(world, sceneEl.is("frozen"), APP.hubChannel!);
   linkedMenuSystem(world);
+  videoMenuSystem(world, aframeSystems.userinput, sceneEl.is("frozen"));
   videoSystem(world, hubsSystems.audioSystem);
   pdfMenuSystem(world, sceneEl.is("frozen"));
   linkSystem(world);
