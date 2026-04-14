@@ -188,7 +188,6 @@ import PinningHelper from "./utils/pinning-helper";
 import { sleep } from "./utils/async-utils";
 import { platformUnsupported } from "./support";
 import { renderAsEntity } from "./utils/jsx-entity";
-import { VideoMenuPrefab, loadVideoMenuButtonIcons } from "./prefabs/video-menu";
 import { loadObjectMenuButtonIcons, ObjectMenuPrefab } from "./prefabs/object-menu";
 import { loadMirrorMenuButtonIcons, MirrorMenuPrefab } from "./prefabs/mirror-menu";
 import { loadPDFMenuButtonIcons } from "./prefabs/pdf-menu";
@@ -211,13 +210,6 @@ preload(loadObjectMenuButtonIcons().then(() => addToScene(ObjectMenuPrefab(), fa
 preload(loadMirrorMenuButtonIcons().then(() => addToScene(MirrorMenuPrefab(), false)));
 preload(addToScene(LinkHoverMenuPrefab(), false));
 preload(loadWaypointPreviewModel().then(() => addToScene(WaypointPreview(), false)));
-preload(
-  loadVideoMenuButtonIcons().then(() => {
-    addToScene(VideoMenuPrefab(), false);
-    addToScene(VideoMenuPrefab(), false);
-  })
-);
-
 const store = window.APP.store;
 store.update({ preferences: { shouldPromptForRefresh: false } }); // Clear flag that prompts for refresh from preference screen
 const mediaSearchStore = window.APP.mediaSearchStore;
