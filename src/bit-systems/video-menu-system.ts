@@ -35,18 +35,65 @@ import { VolumeControlsMaterial } from "../prefabs/video-menu";
 import { updateAudioSettings } from "../update-audio-settings";
 import { VIDEO_FLAGS } from "../inflators/video";
 import { isPinned } from "./networking";
+import { ProjectionMode } from "../utils/projection-mode";
 
 const videoMenuQuery = defineQuery([VideoMenu]);
+const mediaVideoQuery = defineQuery([MediaVideo]);
 const hoveredQuery = defineQuery([HoveredRemoteRight]);
 const sliderHalfWidth = 0.475;
 const SIMPLE_PLAY_BUTTON_Y = -0.125;
 const SIMPLE_PLAY_BUTTON_Z = 0.021;
+const PLAY_BUTTON_ONLY_RAYCAST_ORIGINAL = "__bitEcsPlayButtonOnlyOriginalRaycast";
+const PLAY_BUTTON_ONLY_MESH_DISTANCE_BIAS = 0.01;
+const PLAY_BUTTON_HALF_EXTENT = 0.05;
+const _mediaPlayButtonLocalPoint = new Vector3();
 
 function setCursorRaycastable(world: HubsWorld, menu: number, enable: boolean) {
   let change = enable ? addComponent : removeComponent;
-  change(world, CursorRaycastable, menu);
+  removeComponent(world, CursorRaycastable, VideoMenu.trackRef[menu]);
+  removeComponent(world, CursorRaycastable, VideoMenu.snapRef[menu]);
+  removeComponent(world, CursorRaycastable, VideoMenu.volUpRef[menu]);
+  removeComponent(world, CursorRaycastable, VideoMenu.volDownRef[menu]);
   change(world, CursorRaycastable, VideoMenu.playIndicatorRef[menu]);
   change(world, CursorRaycastable, VideoMenu.pauseIndicatorRef[menu]);
+}
+
+function isInsideMediaPlayButtonHitArea(mesh: Object3D, worldPoint: Vector3) {
+  mesh.updateWorldMatrix(true, false);
+  _mediaPlayButtonLocalPoint.copy(worldPoint);
+  mesh.worldToLocal(_mediaPlayButtonLocalPoint);
+
+  return (
+    Math.abs(_mediaPlayButtonLocalPoint.x) <= PLAY_BUTTON_HALF_EXTENT &&
+    Math.abs(_mediaPlayButtonLocalPoint.y - SIMPLE_PLAY_BUTTON_Y) <= PLAY_BUTTON_HALF_EXTENT
+  );
+}
+
+function patchMediaPlayButtonOnlyRaycast(mesh: any) {
+  if (!mesh || mesh[PLAY_BUTTON_ONLY_RAYCAST_ORIGINAL]) return;
+
+  const originalRaycast = mesh.raycast;
+  mesh[PLAY_BUTTON_ONLY_RAYCAST_ORIGINAL] = originalRaycast;
+  mesh.raycast = (raycaster: any, intersects: any[]) => {
+    const localIntersections: any[] = [];
+    originalRaycast.call(mesh, raycaster, localIntersections);
+    if (!localIntersections.length) return;
+
+    for (let i = 0; i < localIntersections.length; i++) {
+      const intersection = localIntersections[i];
+      if (isInsideMediaPlayButtonHitArea(mesh, intersection.point)) {
+        intersection.distance += PLAY_BUTTON_ONLY_MESH_DISTANCE_BIAS;
+        intersects.push(intersection);
+        return;
+      }
+    }
+  };
+}
+
+function restoreMediaPlayButtonOnlyRaycast(mesh: any) {
+  if (!mesh || !mesh[PLAY_BUTTON_ONLY_RAYCAST_ORIGINAL]) return;
+  mesh.raycast = mesh[PLAY_BUTTON_ONLY_RAYCAST_ORIGINAL];
+  delete mesh[PLAY_BUTTON_ONLY_RAYCAST_ORIGINAL];
 }
 
 const intersectInThePlaneOf = (() => {
@@ -210,6 +257,18 @@ let intersectionPoint = new Vector3();
 export function videoMenuSystem(world: HubsWorld, userinput: any, sceneIsFrozen: boolean) {
   const rightVideoMenu = videoMenuQuery(world)[0];
   findVideoMenuTarget(world, rightVideoMenu, sceneIsFrozen);
+
+  mediaVideoQuery(world).forEach(videoEid => {
+    const mesh = world.eid2obj.get(videoEid) as any;
+    const shouldRestrict =
+      MediaVideo.projection[videoEid] === ProjectionMode.FLAT && shouldShowSimplePlayButton(world, videoEid);
+
+    if (shouldRestrict) {
+      patchMediaPlayButtonOnlyRaycast(mesh);
+    } else {
+      restoreMediaPlayButtonOnlyRaycast(mesh);
+    }
+  });
 
   videoMenuQuery(world).forEach(function (eid) {
     const videoEid = VideoMenu.videoRef[eid];

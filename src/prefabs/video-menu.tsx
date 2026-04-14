@@ -7,6 +7,9 @@ import pauseImageUrl from "../assets/images/sprites/notice/pause.png";
 import { BUTTON_TYPES, Button3D } from "./button3D";
 import { loadTexture, loadTextureFromCache } from "../utils/load-texture";
 import snapIconSrc from "../assets/spawn_message.png";
+import { ProjectionMode } from "../utils/projection-mode";
+import { AlphaMode } from "../utils/create-image-mesh";
+import { Layers } from "../camera-layers";
 
 export async function loadVideoMenuButtonIcons() {
   return Promise.all([
@@ -43,10 +46,10 @@ VolumeControlsMaterial.side = FrontSide;
 
 const uiZ = 0.001;
 const BUTTON_HEIGHT = 0.2;
-const BIG_BUTTON_SCALE: ArrayVec3 = [0.8, 0.8, 0.8];
 const BUTTON_SCALE: ArrayVec3 = [0.6, 0.6, 0.6];
 const SMALL_BUTTON_SCALE: ArrayVec3 = [0.4, 0.4, 0.4];
 const BUTTON_WIDTH = 0.2;
+const LEGACY_PLAY_BUTTON_SCALE: ArrayVec3 = [0.15, 0.15, 0.15];
 
 function Slider({ trackRef, headRef, ...props }: any) {
   return (
@@ -105,13 +108,22 @@ interface VideoButtonProps extends Attrs {
 function VideoActionButton({ buttonIcon, ...props }: VideoButtonProps) {
   const { texture, cacheKey } = loadTextureFromCache(buttonIcon, 1);
   return (
-    <Button3D
+    <entity
+      image={{
+        texture,
+        ratio: 1,
+        projection: ProjectionMode.FLAT,
+        alphaMode: AlphaMode.BLEND,
+        cacheKey,
+        renderOrder: APP.RENDER_ORDER.HUD_ICONS
+      }}
+      cursorRaycastable
+      remoteHoverTarget
+      hoverButton={{ type: BUTTON_TYPES.DEFAULT }}
+      singleActionButton
+      layers={1 << Layers.CAMERA_LAYER_UI}
       position={[0, 0, uiZ]}
-      scale={BIG_BUTTON_SCALE}
-      width={BUTTON_HEIGHT}
-      height={BUTTON_WIDTH}
-      type={BUTTON_TYPES.DEFAULT}
-      icon={{ texture, cacheKey, scale: [0.165, 0.165, 0.165] }}
+      scale={LEGACY_PLAY_BUTTON_SCALE}
       {...props}
     />
   );
